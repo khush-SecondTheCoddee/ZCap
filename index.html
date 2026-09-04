@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pure JS CAPTCHA</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+  #captcha-box { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
+  #question { font-size: 1.2em; margin-bottom: 10px; }
+  #timer { font-weight: bold; margin-bottom: 10px; }
+  input[type=text] { width: 100%; padding: 10px; font-size: 1em; margin-bottom: 10px; }
+  button { width: 100%; padding: 10px; font-size: 1em; }
+  #status { margin-top: 10px; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<div id="captcha-box">
+  <div id="question">Loading challenge...</div>
+  <div id="timer">Time: 30s</div>
+  <input type="text" id="answer" placeholder="Your answer" />
+  <button onclick="verifyAnswer()">Verify</button>
+  <div id="status"></div>
+</div>
+
+<script>
+  let correctAnswerHash = '';
+  let answer = '';
+  let timer;
+  let timeLeft = 30;
+
+  // Generate a simple math question
+  function generateQuestion() {
+    const num1 = Math.floor(Math.random() * 50) + 1;
+    const num2 = Math.floor(Math.random() * 50) + 1;
+    const operations = ['+', '-', '*'];
+    const op = operations[Math.floor(Math.random() * operations.length)];
+    const questionText = `What is ${num1} ${op} ${num2}?`;
+    answer = eval(`${num1} ${op} ${num2}`);
+    document.getElementById('question').innerText = questionText;
+    startTimer();
+  }
+
+  // Start countdown timer
+  function startTimer() {
+    clearInterval(timer);
+    timeLeft = 30;
+    document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
+    timer = setInterval(() => {
+      timeLeft--;
+      document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        document.getElementById('status').innerText = 'Time is up! Try again.';
+        generateQuestion();
+      }
+    }, 1000);
+  }
+
+  // Hash function (SHA-256) in JavaScript
+  async function hashAnswer(answerText) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(answerText);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  // Verify answer
+  async function verifyAnswer() {
+    const userAnswer = document.getElementById('answer').value.trim();
+    if (parseInt(userAnswer, 10) === answer) {
+      // Generate hash for successful answer
+      const hash = await hashAnswer(userAnswer);
+      document.getElementById('status').innerText = '✅ Correct! (Hash: ' + hash + ')';
+      
+      // Here, you could send the hash to your backend for validation
+      // Example: sendHashToServer(hash);
+      
+    } else {
+      document.getElementById('status').innerText = '❌ Incorrect! Try again.';
+    }
+    generateQuestion();
+  }
+
+  // Initialize first question
+  generateQuestion();
+</script>
+
+</body>
+</html>
