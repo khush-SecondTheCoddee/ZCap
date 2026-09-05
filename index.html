@@ -1,92 +1,565 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pure JS CAPTCHA</title>
-<style>
-  body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
-  #captcha-box { max-width: 400px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; }
-  #question { font-size: 1.2em; margin-bottom: 10px; }
-  #timer { font-weight: bold; margin-bottom: 10px; }
-  input[type=text] { width: 100%; padding: 10px; font-size: 1em; margin-bottom: 10px; }
-  button { width: 100%; padding: 10px; font-size: 1em; }
-  #status { margin-top: 10px; font-weight: bold; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Production CAPTCHA Widget</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #16a34a;
+      --error: #dc2626;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #cbd5e1;
+      --ring: rgba(37, 99, 235, 0.35);
+      --radius: 12px;
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card-bg: #1e293b;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --ring: rgba(96, 165, 250, 0.4);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.25rem;
+    }
+
+    .captcha-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.025);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .captcha-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .captcha-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .timer-badge {
+      font-size: 0.8rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text-muted);
+      background: var(--bg);
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      transition: color var(--transition), border-color var(--transition);
+    }
+
+    .timer-badge.warning {
+      color: var(--error);
+      border-color: var(--error);
+    }
+
+    .canvas-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: calc(var(--radius) - 4px);
+      overflow: hidden;
+      margin-bottom: 0.75rem;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 75px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 4px;
+      background-color: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 100%;
+      background-color: var(--primary);
+      transition: width 1s linear, background-color var(--transition);
+    }
+
+    .form-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      height: 44px;
+      padding: 0 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: calc(var(--radius) - 4px);
+      background-color: var(--card-bg);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    input[type="number"]:focus-visible {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--ring);
+    }
+
+    button {
+      height: 44px;
+      padding: 0 1rem;
+      border: none;
+      border-radius: calc(var(--radius) - 4px);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color var(--transition), transform 0.05s ease, opacity var(--transition);
+    }
+
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .btn-icon {
+      background-color: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text);
+      width: 44px;
+      padding: 0;
+    }
+
+    .btn-icon:hover:not(:disabled) {
+      background-color: var(--bg);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    .status-area {
+      min-height: 24px;
+      margin-top: 0.85rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-align: center;
+      transition: color var(--transition);
+    }
+
+    .status-area.success { color: var(--success); }
+    .status-area.error { color: var(--error); }
+    .status-area.info { color: var(--text-muted); }
+  </style>
 </head>
 <body>
 
-<div id="captcha-box">
-  <div id="question">Loading challenge...</div>
-  <div id="timer">Time: 30s</div>
-  <input type="text" id="answer" placeholder="Your answer" />
-  <button onclick="verifyAnswer()">Verify</button>
-  <div id="status"></div>
-</div>
+  <main class="captcha-card" aria-label="Human Verification Card">
+    <div class="captcha-header">
+      <h2 class="captcha-title">Security Check</h2>
+      <div id="timer" class="timer-badge" aria-label="Time remaining">30s</div>
+    </div>
 
-<script>
-  let correctAnswerHash = '';
-  let answer = '';
-  let timer;
-  let timeLeft = 30;
+    <!-- Anti-bot visual canvas -->
+    <div class="canvas-container">
+      <canvas id="captchaCanvas" width="320" height="75" aria-hidden="true"></canvas>
+    </div>
 
-  // Generate a simple math question
-  function generateQuestion() {
-    const num1 = Math.floor(Math.random() * 50) + 1;
-    const num2 = Math.floor(Math.random() * 50) + 1;
-    const operations = ['+', '-', '*'];
-    const op = operations[Math.floor(Math.random() * operations.length)];
-    const questionText = `What is ${num1} ${op} ${num2}?`;
-    answer = eval(`${num1} ${op} ${num2}`);
-    document.getElementById('question').innerText = questionText;
-    startTimer();
-  }
+    <!-- Expiration countdown bar -->
+    <div class="progress-bar-container">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
 
-  // Start countdown timer
-  function startTimer() {
-    clearInterval(timer);
-    timeLeft = 30;
-    document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
-    timer = setInterval(() => {
-      timeLeft--;
-      document.getElementById('timer').innerText = `Time: ${timeLeft}s`;
-      if (timeLeft <= 0) {
-        clearInterval(timer);
-        document.getElementById('status').innerText = 'Time is up! Try again.';
-        generateQuestion();
+    <form id="captchaForm" novalidate>
+      <div class="form-group">
+        <div class="input-wrapper">
+          <label for="captchaInput">Enter the solution</label>
+          <input 
+            type="number" 
+            id="captchaInput" 
+            placeholder="Enter answer" 
+            inputmode="numeric" 
+            autocomplete="off" 
+            required 
+            aria-describedby="status"
+          />
+        </div>
+        <button 
+          type="button" 
+          id="refreshBtn" 
+          class="btn-icon" 
+          title="Refresh Challenge" 
+          aria-label="Get a new math challenge"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </button>
+      </div>
+
+      <button type="submit" id="verifyBtn" class="btn-submit">Verify</button>
+    </form>
+
+    <!-- Accessible status live-region for screen readers -->
+    <div id="status" class="status-area info" role="status" aria-live="polite"></div>
+  </main>
+
+  <script>
+    /**
+     * Enterprise Production CAPTCHA Controller
+     * Zero eval(), obfuscated canvas rendering, salted SHA-256 validation,
+     * rate-limit lockouts, and accessible ARIA updates.
+     */
+    class SecureCaptcha {
+      #canvas;
+      #ctx;
+      #timerId = null;
+      #duration = 30;
+      #remaining = 30;
+      #expectedHash = null;
+      #salt = null;
+      #challengeTimestamp = 0;
+      #failedAttempts = 0;
+      #maxAttempts = 3;
+      #isLocked = false;
+
+      // Safe deterministic operator registry
+      #operators = [
+        { symbol: '+', fn: (a, b) => a + b },
+        { symbol: '-', fn: (a, b) => a - b },
+        { symbol: '×', fn: (a, b) => a * b }
+      ];
+
+      constructor(canvasId) {
+        this.#canvas = document.getElementById(canvasId);
+        this.#ctx = this.#canvas.getContext('2d');
+        this.#initElements();
+        this.#bindEvents();
+        this.generateChallenge();
       }
-    }, 1000);
-  }
 
-  // Hash function (SHA-256) in JavaScript
-  async function hashAnswer(answerText) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(answerText);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  }
+      #initElements() {
+        this.form = document.getElementById('captchaForm');
+        this.input = document.getElementById('captchaInput');
+        this.timer = document.getElementById('timer');
+        this.progressBar = document.getElementById('progressBar');
+        this.status = document.getElementById('status');
+        this.verifyBtn = document.getElementById('verifyBtn');
+        this.refreshBtn = document.getElementById('refreshBtn');
+      }
 
-  // Verify answer
-  async function verifyAnswer() {
-    const userAnswer = document.getElementById('answer').value.trim();
-    if (parseInt(userAnswer, 10) === answer) {
-      // Generate hash for successful answer
-      const hash = await hashAnswer(userAnswer);
-      document.getElementById('status').innerText = '✅ Correct! (Hash: ' + hash + ')';
-      
-      // Here, you could send the hash to your backend for validation
-      // Example: sendHashToServer(hash);
-      
-    } else {
-      document.getElementById('status').innerText = '❌ Incorrect! Try again.';
+      #bindEvents() {
+        this.form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.verify();
+        });
+
+        this.refreshBtn.addEventListener('click', () => {
+          if (!this.#isLocked) this.generateChallenge();
+        });
+      }
+
+      /**
+       * Cryptographically salted SHA-256 calculation via Web Crypto API
+       */
+      async #hashSolution(val, salt) {
+        const buffer = new TextEncoder().encode(String(val) + salt);
+        const digest = await window.crypto.subtle.digest('SHA-256', buffer);
+        return Array.from(new Uint8Array(digest))
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
+
+      #getRandomInt(min, max) {
+        const array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        return min + (array[0] % (max - min + 1));
+      }
+
+      async generateChallenge() {
+        if (this.#isLocked) return;
+
+        clearInterval(this.#timerId);
+        this.input.value = '';
+        this.input.focus();
+        this.#setStatus('', 'info');
+
+        const op = this.#operators[this.#getRandomInt(0, this.#operators.length - 1)];
+        let num1 = this.#getRandomInt(10, 40);
+        let num2 = this.#getRandomInt(2, 10);
+
+        // Keep subtractions positive
+        if (op.symbol === '-' && num2 > num1) {
+          [num1, num2] = [num2, num1];
+        }
+
+        const answer = op.fn(num1, num2);
+        
+        // Dynamic salt prevents client-side precomputed rainbow tables
+        this.#salt = window.crypto.randomUUID();
+        this.#expectedHash = await this.#hashSolution(answer, this.#salt);
+        this.#challengeTimestamp = Date.now();
+
+        this.#drawCanvas(`${num1} ${op.symbol} ${num2} = ?`);
+        this.#startTimer();
+      }
+
+      #drawCanvas(text) {
+        const { width, height } = this.#canvas;
+        const ctx = this.#ctx;
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Responsive background based on system theme
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        grad.addColorStop(0, isDark ? '#1e293b' : '#f1f5f9');
+        grad.addColorStop(1, isDark ? '#0f172a' : '#e2e8f0');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Noise dots
+        for (let i = 0; i < 50; i++) {
+          ctx.beginPath();
+          ctx.arc(
+            this.#getRandomInt(0, width),
+            this.#getRandomInt(0, height),
+            this.#getRandomInt(1, 2),
+            0,
+            2 * Math.PI
+          );
+          ctx.fillStyle = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
+          ctx.fill();
+        }
+
+        // Interference curves
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(this.#getRandomInt(0, width), this.#getRandomInt(0, height));
+          ctx.bezierCurveTo(
+            this.#getRandomInt(0, width), this.#getRandomInt(0, height),
+            this.#getRandomInt(0, width), this.#getRandomInt(0, height),
+            this.#getRandomInt(0, width), this.#getRandomInt(0, height)
+          );
+          ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(100, 116, 139, 0.35)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        // Obfuscated Glyph Rendering
+        ctx.font = 'bold 26px -apple-system, sans-serif';
+        ctx.textBaseline = 'middle';
+        
+        const chars = text.split('');
+        const startX = 35;
+        const spacing = (width - 70) / chars.length;
+
+        chars.forEach((char, i) => {
+          ctx.save();
+          const charX = startX + i * spacing;
+          const charY = height / 2 + this.#getRandomInt(-4, 4);
+          const angle = (this.#getRandomInt(-12, 12) * Math.PI) / 180;
+
+          ctx.translate(charX, charY);
+          ctx.rotate(angle);
+          ctx.fillStyle = isDark ? '#f8fafc' : '#0f172a';
+          ctx.fillText(char, 0, 0);
+          ctx.restore();
+        });
+      }
+
+      #startTimer() {
+        this.#remaining = this.#duration;
+        this.#updateTimerUI();
+
+        this.#timerId = setInterval(() => {
+          this.#remaining--;
+          this.#updateTimerUI();
+
+          if (this.#remaining <= 0) {
+            clearInterval(this.#timerId);
+            this.#setStatus('Session expired. Generating new challenge...', 'error');
+            setTimeout(() => this.generateChallenge(), 1000);
+          }
+        }, 1000);
+      }
+
+      #updateTimerUI() {
+        this.timer.innerText = `${this.#remaining}s`;
+        const percent = (this.#remaining / this.#duration) * 100;
+        this.progressBar.style.width = `${percent}%`;
+
+        if (this.#remaining <= 5) {
+          this.timer.classList.add('warning');
+          this.progressBar.style.backgroundColor = 'var(--error)';
+        } else {
+          this.timer.classList.remove('warning');
+          this.progressBar.style.backgroundColor = 'var(--primary)';
+        }
+      }
+
+      #setStatus(text, type = 'info') {
+        this.status.innerText = text;
+        this.status.className = `status-area ${type}`;
+      }
+
+      async verify() {
+        if (this.#isLocked) return;
+
+        const rawValue = this.input.value.trim();
+        if (!rawValue) {
+          this.#setStatus('Please enter an answer.', 'error');
+          return;
+        }
+
+        // Time check
+        const elapsed = (Date.now() - this.#challengeTimestamp) / 1000;
+        if (elapsed > this.#duration) {
+          this.#setStatus('Challenge timed out. Refreshing...', 'error');
+          this.generateChallenge();
+          return;
+        }
+
+        const computedHash = await this.#hashSolution(rawValue, this.#salt);
+
+        if (computedHash === this.#expectedHash) {
+          clearInterval(this.#timerId);
+          this.#setStatus('✓ Verification successful!', 'success');
+          this.input.disabled = true;
+          this.verifyBtn.disabled = true;
+          this.refreshBtn.disabled = true;
+          this.#failedAttempts = 0;
+
+          // Dispatch custom event containing token payload
+          document.dispatchEvent(new CustomEvent('captcha-verified', {
+            detail: {
+              salt: this.#salt,
+              hash: computedHash,
+              verifiedAt: Date.now()
+            }
+          }));
+        } else {
+          this.#failedAttempts++;
+          if (this.#failedAttempts >= this.#maxAttempts) {
+            this.#triggerLockout(10);
+          } else {
+            this.#setStatus(`Incorrect answer. ${this.#maxAttempts - this.#failedAttempts} attempt(s) left.`, 'error');
+            this.generateChallenge();
+          }
+        }
+      }
+
+      #triggerLockout(seconds) {
+        this.#isLocked = true;
+        clearInterval(this.#timerId);
+        this.input.disabled = true;
+        this.verifyBtn.disabled = true;
+        this.refreshBtn.disabled = true;
+
+        let lockoutTimer = seconds;
+        this.#setStatus(`Too many failed attempts. Locked for ${lockoutTimer}s.`, 'error');
+
+        const interval = setInterval(() => {
+          lockoutTimer--;
+          this.#setStatus(`Too many failed attempts. Locked for ${lockoutTimer}s.`, 'error');
+          if (lockoutTimer <= 0) {
+            clearInterval(interval);
+            this.#isLocked = false;
+            this.#failedAttempts = 0;
+            this.input.disabled = false;
+            this.verifyBtn.disabled = false;
+            this.refreshBtn.disabled = false;
+            this.generateChallenge();
+          }
+        }, 1000);
+      }
     }
-    generateQuestion();
-  }
 
-  // Initialize first question
-  generateQuestion();
-</script>
-
+    // Initialize CAPTCHA once the DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      new SecureCaptcha('captchaCanvas');
+    });
+  </script>
 </body>
 </html>
