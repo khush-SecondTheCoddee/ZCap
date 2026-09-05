@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ZCap // Autonomous Ghost-Layer Shield</title>
+  <title>ZCap // Multi-Core PoW (D=50 Astronomical Mode)</title>
   <style>
     :root {
       --bg: #030712;
-      --card-bg: rgba(11, 17, 32, 0.85);
-      --card-border: rgba(139, 92, 246, 0.18);
+      --card-bg: rgba(11, 17, 32, 0.9);
+      --card-border: rgba(139, 92, 246, 0.22);
       --primary: #8b5cf6;
       --primary-hover: #7c3aed;
       --primary-glow: rgba(139, 92, 246, 0.4);
@@ -48,7 +48,7 @@
 
     .zcap-wrapper {
       width: 100%;
-      max-width: 440px;
+      max-width: 480px;
       position: relative;
     }
 
@@ -80,12 +80,11 @@
       overflow: hidden;
     }
 
-    /* Header & Monogram */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.15rem;
+      margin-bottom: 0.85rem;
     }
 
     .brand {
@@ -151,6 +150,47 @@
       transform: rotate(45deg);
     }
 
+    /* PoW Difficulty Configurator */
+    .pow-selector-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .pow-selector-box select {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 6px;
+      padding: 4px 6px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .pow-warning {
+      color: #fbbf24;
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      padding: 4px 8px;
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.25);
+      border-radius: 6px;
+      margin-bottom: 0.85rem;
+      display: none;
+    }
+
+    .pow-warning.active { display: block; }
+
     /* Navigation Tabs */
     .mode-nav {
       display: grid;
@@ -160,11 +200,11 @@
       padding: 3px;
       border-radius: 10px;
       border: 1px solid var(--surface-border);
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }
 
     .nav-tab {
-      padding: 7px 4px;
+      padding: 6px 4px;
       background: transparent;
       border: none;
       color: var(--text-muted);
@@ -188,16 +228,16 @@
 
     .nav-tab svg { width: 14px; height: 14px; }
 
-    /* Viewport Area */
+    /* Viewport */
     .viewport {
       position: relative;
       width: 100%;
-      height: 185px;
+      height: 180px;
       border-radius: 12px;
       background: #02040a;
       border: 1px solid var(--surface-border);
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }
 
     #mainCanvas, #ghostOverlayCanvas {
@@ -238,7 +278,7 @@
       user-select: none;
       touch-action: none;
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }
 
     .slider-progress {
@@ -289,7 +329,7 @@
     .input-row {
       display: flex;
       gap: 0.5rem;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }
 
     input[type="text"] {
@@ -316,7 +356,6 @@
       box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
-    /* Floating Ghost Text Placeholder */
     .ghost-text-hologram {
       position: absolute;
       left: 0;
@@ -351,22 +390,22 @@
 
     .btn-submit:hover { opacity: 0.95; transform: translateY(-1px); }
 
-    /* Telemetry HUD */
+    /* Telemetry Dashboard with PoW Multi-Core Stats */
     .telemetry-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 5px;
       padding: 0.65rem;
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--surface-border);
       border-radius: 10px;
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       margin-bottom: 0.75rem;
     }
 
     .telemetry-cell { display: flex; flex-direction: column; gap: 2px; }
-    .telemetry-label { color: var(--text-muted); font-size: 0.58rem; text-transform: uppercase; }
+    .telemetry-label { color: var(--text-muted); font-size: 0.55rem; text-transform: uppercase; }
     .telemetry-val { color: var(--text); font-weight: 700; }
 
     .status-panel {
@@ -409,23 +448,14 @@
       font-family: var(--font-mono);
       font-size: 0.62rem;
       color: #38bdf8;
-      max-height: 90px;
+      max-height: 95px;
       overflow-y: auto;
       word-break: break-all;
       display: none;
     }
 
     .proof-box.open { display: block; }
-
     .hidden { display: none !important; }
-
-    .honeypot-trap {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-      width: 0;
-      height: 0;
-    }
 
     #confettiCanvas {
       position: absolute;
@@ -444,9 +474,6 @@
     <div class="ambient-glow" id="ambientGlow"></div>
     <canvas id="confettiCanvas"></canvas>
 
-    <!-- Invisible Bot Honeypots with Decoy Ghost Labels -->
-    <input type="text" class="honeypot-trap" id="zcap_ghost_trap" tabindex="-1" autocomplete="off" />
-
     <main class="zcap-card">
       <header class="header">
         <div class="brand">
@@ -457,8 +484,8 @@
             </svg>
           </div>
           <div class="brand-text">
-            <h1>ZCap <span class="ghost-pill">GHOST v4.2</span></h1>
-            <p>Zero-Knowledge Spectral Attestation</p>
+            <h1>ZCap <span class="ghost-pill">PoW-X</span></h1>
+            <p>Multi-Core Asymmetric Proof Shield</p>
           </div>
         </div>
         <button class="btn-icon" id="refreshBtn" title="Regenerate Challenge" aria-label="Refresh">
@@ -467,6 +494,22 @@
           </svg>
         </button>
       </header>
+
+      <!-- PoW Adaptive Difficulty Selector -->
+      <div class="pow-selector-box">
+        <span>Target Difficulty (D):</span>
+        <select id="powDifficultySelect">
+          <option value="12">D=12 (~4K Hashes / ~10ms)</option>
+          <option value="16" selected>D=16 (~65K Hashes / ~80ms)</option>
+          <option value="20">D=20 (~1M Hashes / ~1.2s)</option>
+          <option value="24">D=24 (~16.7M Hashes / ~25s)</option>
+          <option value="50">D=50 (1.125 Quadrillion / ~178 Years!)</option>
+        </select>
+      </div>
+
+      <div class="pow-warning" id="powWarning">
+        ⚠️ <strong>D=50 (Astronomical Difficulty):</strong> Finding $2^{50}$ hashes in JS will run all CPU cores at 100% for ~178 years.
+      </div>
 
       <!-- Navigation Tabs -->
       <nav class="mode-nav" role="tablist">
@@ -491,18 +534,18 @@
       <!-- Dual-Layer Viewport -->
       <div class="viewport" id="viewport">
         <div class="hud-header">
-          <span id="hudMode">MODE // SPECTRAL_OCR</span>
-          <span id="hudGhostIndex">GHOST NOISE: 84%</span>
+          <span id="hudMode">MODE // SPECTRAL_GHOST_OCR</span>
+          <span id="hudThreads">CPU POOL: ACTIVE</span>
         </div>
         <canvas id="mainCanvas"></canvas>
         <canvas id="ghostOverlayCanvas"></canvas>
       </div>
 
-      <!-- Mode 1, 3, 4: Text Form with Holographic Ghost Text -->
+      <!-- Text Mode Input with Holographic Ghost Text -->
       <div id="textControls">
         <form id="textForm" class="input-row" novalidate>
           <div class="input-wrapper">
-            <span class="ghost-text-hologram" id="ghostHologram">TYPE CODE</span>
+            <span class="ghost-text-hologram" id="ghostHologram">ENTER CODE</span>
             <input type="text" id="textInput" placeholder="" maxlength="6" autocomplete="off" />
           </div>
           <button type="button" class="btn-icon hidden" id="audioPlayBtn" style="height:44px;width:44px;" title="Speak Digits">
@@ -514,7 +557,7 @@
         </form>
       </div>
 
-      <!-- Mode 2: Slider Controller -->
+      <!-- Slider Mode Controls -->
       <div id="sliderControls" class="hidden">
         <div class="slider-track" id="sliderTrack">
           <div class="slider-progress" id="sliderProgress"></div>
@@ -527,19 +570,23 @@
         </div>
       </div>
 
-      <!-- Real-time Telemetry Dashboard -->
+      <!-- Multi-Core Telemetry HUD -->
       <div class="telemetry-grid">
         <div class="telemetry-cell">
-          <span class="telemetry-label">PoW Hashrate</span>
-          <span class="telemetry-val" id="telemetryPow">Mining...</span>
+          <span class="telemetry-label">Cores</span>
+          <span class="telemetry-val" id="telemetryCores">4 Thr</span>
         </div>
         <div class="telemetry-cell">
-          <span class="telemetry-label">Humanity Score</span>
-          <span class="telemetry-val" id="telemetryEntropy" style="color: var(--cyan);">99.2%</span>
+          <span class="telemetry-label">Hashrate</span>
+          <span class="telemetry-val" id="telemetryHashrate">0 kH/s</span>
         </div>
         <div class="telemetry-cell">
-          <span class="telemetry-label">Ghost Matrix</span>
-          <span class="telemetry-val" id="telemetryGhost">Active</span>
+          <span class="telemetry-label">Est. ETA</span>
+          <span class="telemetry-val" id="telemetryTime" style="color: var(--cyan);">Mining...</span>
+        </div>
+        <div class="telemetry-cell">
+          <span class="telemetry-label">Energy</span>
+          <span class="telemetry-val" id="telemetryEnergy">~0.0 µJ</span>
         </div>
       </div>
 
@@ -548,17 +595,17 @@
       <!-- Cryptographic Attestation Drawer -->
       <footer class="proof-drawer">
         <div class="proof-toggle" id="proofToggle">
-          <span>📜 ZCap Attestation Token</span>
+          <span>📜 Signed PoW & Attestation Proof</span>
           <span id="proofArrow">▼</span>
         </div>
-        <div class="proof-box" id="proofBox">// Awaiting attestation solve...</div>
+        <div class="proof-box" id="proofBox">// Mining multi-core PoW proof...</div>
       </footer>
     </main>
   </div>
 
   <script>
     /**
-     * ZCap Synthesizer & Audio FX Engine
+     * Web Audio FX Engine
      */
     class ZCapAudioSynth {
       constructor() { this.ctx = null; }
@@ -666,9 +713,114 @@
     }
 
     /**
-     * ZCap Master Controller with Ghost-Text Subsystems
+     * Multi-Threaded PoW Engine with 64-bit BigInt Nonce Support (D=50 Capable)
      */
-    class ZCapEngine {
+    class MultiThreadedPoW {
+      #workers = [];
+      #workerCount = 4;
+      #isMining = false;
+
+      constructor(onProgress, onSolved) {
+        this.onProgress = onProgress;
+        this.onSolved = onSolved;
+        this.#workerCount = Math.max(2, Math.min(navigator.hardwareConcurrency || 4, 8));
+      }
+
+      get workerCount() { return this.#workerCount; }
+
+      #createWorkerBlob() {
+        const code = `
+          // 64-bit BigInt SHA-256 Worker
+          self.onmessage = async (e) => {
+            const { seed, difficultyBits, workerId, totalWorkers } = e.data;
+            let nonce = BigInt(workerId);
+            const step = BigInt(totalWorkers);
+            const t0 = performance.now();
+            let totalHashes = 0;
+
+            const zeroChars = Math.floor(difficultyBits / 4);
+            const remainderBits = difficultyBits % 4;
+            const targetPrefix = '0'.repeat(zeroChars);
+
+            while (true) {
+              const msg = seed + ':' + nonce.toString();
+              const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+              const hex = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+              totalHashes++;
+
+              let matches = hex.startsWith(targetPrefix);
+              if (matches && remainderBits > 0) {
+                const nextHexChar = parseInt(hex[zeroChars], 16);
+                matches = nextHexChar < (1 << (4 - remainderBits));
+              }
+
+              if (matches) {
+                self.postMessage({ type: 'solved', nonce: nonce.toString(), hash: hex, totalHashes, time: performance.now() - t0, workerId });
+                break;
+              }
+
+              nonce += step;
+
+              if (totalHashes % 1200 === 0) {
+                self.postMessage({ type: 'progress', hashes: 1200 });
+              }
+            }
+          };
+        `;
+        return new Blob([code], { type: 'application/javascript' });
+      }
+
+      start(seed, difficultyBits) {
+        this.stop();
+        this.#isMining = true;
+        const blobUrl = URL.createObjectURL(this.#createWorkerBlob());
+        let cumulativeHashes = 0;
+        const startTime = performance.now();
+
+        for (let i = 0; i < this.#workerCount; i++) {
+          const worker = new Worker(blobUrl);
+          worker.onmessage = (e) => {
+            if (!this.#isMining) return;
+            if (e.data.type === 'progress') {
+              cumulativeHashes += e.data.hashes;
+              const elapsedSec = (performance.now() - startTime) / 1000;
+              const hashrate = elapsedSec > 0 ? cumulativeHashes / elapsedSec : 0;
+              this.onProgress({ cumulativeHashes, hashrate, difficultyBits });
+            } else if (e.data.type === 'solved') {
+              this.stop();
+              const elapsedMs = performance.now() - startTime;
+              this.onSolved({
+                seed,
+                difficultyBits,
+                nonce: e.data.nonce,
+                hash: e.data.hash,
+                elapsedMs,
+                totalHashes: cumulativeHashes + e.data.totalHashes,
+                workerId: e.data.workerId
+              });
+            }
+          };
+          worker.postMessage({
+            seed,
+            difficultyBits: parseInt(difficultyBits, 10),
+            workerId: i,
+            totalWorkers: this.#workerCount
+          });
+          this.#workers.push(worker);
+        }
+      }
+
+      stop() {
+        this.#isMining = false;
+        this.#workers.forEach(w => w.terminate());
+        this.#workers = [];
+      }
+    }
+
+    /**
+     * Master ZCap Controller
+     */
+    class ZCapMaster {
       #mode = 'ocr';
       #mainCanvas; #mainCtx;
       #overlayCanvas; #overlayCtx;
@@ -677,18 +829,16 @@
       #expectedCode = '';
       #audioCode = '';
 
-      // Jigsaw & Reticle State
+      // Jigsaw & Reticle
       #puzzleTargetX = 0;
       #puzzleTargetY = 0;
       #sliderX = 0;
       #gyroTargetAngle = 0;
       #gyroUserAngle = 0;
 
-      // PoW Worker & Telemetry
-      #powWorker = null;
-      #powProof = null;
-      #mouseTrajectory = [];
-      #entropy = 99.2;
+      // PoW Engine
+      #powEngine;
+      #powSolvedPayload = null;
 
       constructor() {
         this.#mainCanvas = document.getElementById('mainCanvas');
@@ -701,8 +851,8 @@
 
         this.#initDPI();
         this.#initDOM();
+        this.#initPoW();
         this.#bindEvents();
-        this.#initPoWWorker();
         this.switchMode('ocr');
       }
 
@@ -729,16 +879,85 @@
         this.textForm = document.getElementById('textForm');
         this.status = document.getElementById('statusPanel');
         this.hudMode = document.getElementById('hudMode');
-        this.hudGhostIndex = document.getElementById('hudGhostIndex');
-        this.telemetryPow = document.getElementById('telemetryPow');
-        this.telemetryEntropy = document.getElementById('telemetryEntropy');
-        this.proofBox = document.getElementById('proofBox');
+        this.hudThreads = document.getElementById('hudThreads');
         this.ghostHologram = document.getElementById('ghostHologram');
         this.audioPlayBtn = document.getElementById('audioPlayBtn');
+        this.powSelect = document.getElementById('powDifficultySelect');
+        this.powWarning = document.getElementById('powWarning');
+        this.telemetryCores = document.getElementById('telemetryCores');
+        this.telemetryHashrate = document.getElementById('telemetryHashrate');
+        this.telemetryTime = document.getElementById('telemetryTime');
+        this.telemetryEnergy = document.getElementById('telemetryEnergy');
+        this.proofBox = document.getElementById('proofBox');
+      }
+
+      #initPoW() {
+        this.#powEngine = new MultiThreadedPoW(
+          ({ cumulativeHashes, hashrate, difficultyBits }) => {
+            this.telemetryHashrate.innerText = `${(hashrate / 1000).toFixed(1)} kH/s`;
+            
+            // Format energy in Microjoules (µJ) or Megajoules (MJ)
+            const energyJoules = cumulativeHashes * 5e-9;
+            this.telemetryEnergy.innerText = energyJoules > 1 ? `${energyJoules.toFixed(1)} J` : `${(energyJoules * 1e6).toFixed(1)} µJ`;
+
+            // Calculate ETA
+            if (hashrate > 0) {
+              const expectedTotal = 2 ** difficultyBits;
+              const remainingHashes = Math.max(0, expectedTotal - cumulativeHashes);
+              const etaSec = remainingHashes / hashrate;
+
+              if (etaSec > 86400 * 365) {
+                this.telemetryTime.innerText = `~${(etaSec / (86400 * 365)).toFixed(1)} Years`;
+              } else if (etaSec > 3600) {
+                this.telemetryTime.innerText = `~${(etaSec / 3600).toFixed(1)} Hours`;
+              } else if (etaSec > 60) {
+                this.telemetryTime.innerText = `~${(etaSec / 60).toFixed(1)} Min`;
+              } else {
+                this.telemetryTime.innerText = `~${etaSec.toFixed(1)}s`;
+              }
+            }
+          },
+          (proof) => {
+            this.#powSolvedPayload = proof;
+            this.telemetryTime.innerText = `${proof.elapsedMs.toFixed(0)} ms`;
+            this.telemetryTime.style.color = 'var(--success)';
+            this.proofBox.innerText = JSON.stringify({
+              status: 'PoW_Verified',
+              targetBits: proof.difficultyBits,
+              nonce: proof.nonce,
+              hash: proof.hash,
+              computeTimeMs: proof.elapsedMs.toFixed(2),
+              hashesComputed: proof.totalHashes,
+              solvedOnThread: proof.workerId
+            }, null, 2);
+          }
+        );
+
+        this.telemetryCores.innerText = `${this.#powEngine.workerCount} Cores`;
+        this.#startPoWMining();
+      }
+
+      #startPoWMining() {
+        this.#powSolvedPayload = null;
+        this.telemetryTime.innerText = 'Mining...';
+        this.telemetryTime.style.color = 'var(--cyan)';
+        const difficulty = parseInt(this.powSelect.value, 10);
+        
+        if (difficulty >= 50) {
+          this.powWarning.classList.add('active');
+        } else {
+          this.powWarning.classList.remove('active');
+        }
+
+        const seed = window.crypto.randomUUID();
+        this.#powEngine.start(seed, difficulty);
       }
 
       #bindEvents() {
-        // Mode Navigation
+        this.powSelect.addEventListener('change', () => {
+          if (!this.#isVerified) this.#startPoWMining();
+        });
+
         document.querySelectorAll('.nav-tab').forEach(tab => {
           tab.addEventListener('click', () => {
             if (this.#isVerified) return;
@@ -748,28 +967,18 @@
           });
         });
 
-        // Refresh Challenge
         document.getElementById('refreshBtn').addEventListener('click', () => {
-          if (!this.#isVerified) this.switchMode(this.#mode);
-        });
-
-        // Holographic Ghost Text Input sync
-        this.textInput.addEventListener('input', (e) => {
-          if (this.textInput.value.length > 0) {
-            this.ghostHologram.style.opacity = '0';
-          } else {
-            this.ghostHologram.style.opacity = '1';
+          if (!this.#isVerified) {
+            this.switchMode(this.#mode);
+            this.#startPoWMining();
           }
         });
 
-        // Mouse Tracking
-        window.addEventListener('pointermove', (e) => {
-          this.#mouseTrajectory.push({ x: e.clientX, y: e.clientY, t: performance.now() });
-          if (this.#mouseTrajectory.length > 35) this.#mouseTrajectory.shift();
-          this.#calcEntropy();
+        this.textInput.addEventListener('input', () => {
+          this.ghostHologram.style.opacity = this.textInput.value.length > 0 ? '0' : '1';
         });
 
-        // Slider Physics
+        // Slider Dragging
         let isDragging = false;
         let startX = 0;
 
@@ -806,7 +1015,6 @@
         window.addEventListener('touchmove', onDragMove, { passive: true });
         window.addEventListener('touchend', onDragEnd);
 
-        // Form Submit
         this.textForm.addEventListener('submit', (e) => {
           e.preventDefault();
           this.#verifyText();
@@ -820,57 +1028,6 @@
           this.proofBox.classList.toggle('open');
           document.getElementById('proofArrow').innerText = this.proofBox.classList.contains('open') ? '▲' : '▼';
         });
-      }
-
-      #initPoWWorker() {
-        const workerCode = `
-          self.onmessage = async (e) => {
-            const { seed, difficulty } = e.data;
-            const target = '0'.repeat(difficulty);
-            let nonce = 0;
-            const t0 = performance.now();
-            while(true) {
-              const msg = seed + ':' + nonce;
-              const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-              const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-              if (hex.startsWith(target)) {
-                self.postMessage({ type: 'done', nonce, hash: hex, time: performance.now() - t0 });
-                break;
-              }
-              nonce++;
-              if (nonce % 2000 === 0) {
-                self.postMessage({ type: 'progress', rate: Math.round(nonce / ((performance.now() - t0)/1000)) });
-              }
-            }
-          };
-        `;
-        const blob = new Blob([workerCode], { type: 'application/javascript' });
-        this.#powWorker = new Worker(URL.createObjectURL(blob));
-
-        this.#powWorker.onmessage = (e) => {
-          if (e.data.type === 'progress') {
-            this.telemetryPow.innerText = `${(e.data.rate / 1000).toFixed(1)} kH/s`;
-          } else if (e.data.type === 'done') {
-            this.#powProof = e.data;
-            this.telemetryPow.innerText = `Solved (${e.data.time.toFixed(0)}ms)`;
-            this.telemetryPow.style.color = 'var(--success)';
-          }
-        };
-
-        this.#powWorker.postMessage({ seed: window.crypto.randomUUID(), difficulty: 3 });
-      }
-
-      #calcEntropy() {
-        if (this.#mouseTrajectory.length < 8) return;
-        let diffs = 0;
-        for (let i = 2; i < this.#mouseTrajectory.length; i++) {
-          const a = this.#mouseTrajectory[i - 2];
-          const b = this.#mouseTrajectory[i - 1];
-          const c = this.#mouseTrajectory[i];
-          diffs += Math.abs(Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(b.y - a.y, b.x - a.x));
-        }
-        this.#entropy = Math.min(99.9, Math.max(82.0, 94.0 + (diffs % 5.8)));
-        this.telemetryEntropy.innerText = `${this.#entropy.toFixed(1)}%`;
       }
 
       switchMode(mode) {
@@ -902,13 +1059,9 @@
         else if (mode === 'audio') this.#initAudio();
       }
 
-      /**
-       * MODE 1: Spectral Ghost OCR Engine
-       * Renders phantom decoy characters & waves in the background to fool computer vision OCR
-       */
       #initGhostOCR() {
         this.hudMode.innerText = 'MODE // SPECTRAL_GHOST_OCR';
-        this.hudGhostIndex.innerText = 'DECOY NOISE: 88%';
+        this.hudThreads.innerText = `CPU POOL: ${this.#powEngine.workerCount} ACTIVE`;
         this.audioPlayBtn.classList.add('hidden');
         this.ghostHologram.innerText = 'ENTER CODE';
 
@@ -920,29 +1073,17 @@
         this.#mainCtx.fillStyle = '#02040a';
         this.#mainCtx.fillRect(0, 0, w, h);
 
-        // LAYER 1: Background Ghost Glyphs (Decoys to baffle neural OCR models)
-        const ghostDecoys = '8B6D0QZXY93A7F4';
-        for (let i = 0; i < 22; i++) {
+        const decoys = '8B0QZXY93A7F4';
+        for (let i = 0; i < 24; i++) {
           this.#mainCtx.save();
           this.#mainCtx.font = `${Math.floor(Math.random() * 24 + 18)}px monospace`;
-          this.#mainCtx.fillStyle = `rgba(139, 92, 246, ${Math.random() * 0.18 + 0.06})`; // Phantom violet
+          this.#mainCtx.fillStyle = `rgba(139, 92, 246, ${Math.random() * 0.18 + 0.06})`;
           this.#mainCtx.translate(Math.random() * w, Math.random() * h);
           this.#mainCtx.rotate((Math.random() - 0.5) * 1.4);
-          this.#mainCtx.fillText(ghostDecoys[Math.floor(Math.random() * ghostDecoys.length)], 0, 0);
+          this.#mainCtx.fillText(decoys[Math.floor(Math.random() * decoys.length)], 0, 0);
           this.#mainCtx.restore();
         }
 
-        // LAYER 2: Ghost Interference Phase Waves
-        for (let i = 0; i < 3; i++) {
-          this.#mainCtx.strokeStyle = 'rgba(6, 182, 212, 0.22)';
-          this.#mainCtx.lineWidth = 1.5;
-          this.#mainCtx.beginPath();
-          this.#mainCtx.moveTo(0, Math.random() * h);
-          this.#mainCtx.bezierCurveTo(w * 0.3, Math.random() * h, w * 0.7, Math.random() * h, w, Math.random() * h);
-          this.#mainCtx.stroke();
-        }
-
-        // LAYER 3: High-Contrast Foreground Target Code
         this.#expectedCode.split('').forEach((char, idx) => {
           this.#mainCtx.save();
           const x = 45 + idx * 60;
@@ -959,15 +1100,10 @@
         });
       }
 
-      /**
-       * MODE 2: Ghost Slicer (Puzzle)
-       */
       #initGhostPuzzle() {
         this.hudMode.innerText = 'MODE // GHOST_SLICER';
-        this.hudGhostIndex.innerText = 'PHASE SNAP: 4PX';
         document.getElementById('sliderHint').innerText = 'Slide ghost piece to target';
-        const w = this.viewW, h = this.viewH;
-        const size = 50;
+        const w = this.viewW, h = this.viewH, size = 50;
 
         this.#puzzleTargetX = Math.floor(Math.random() * (w - size - 140)) + 100;
         this.#puzzleTargetY = Math.floor(Math.random() * (h - size - 40)) + 20;
@@ -975,18 +1111,10 @@
         const render = () => {
           this.#mainCtx.clearRect(0, 0, w, h);
           const grad = this.#mainCtx.createLinearGradient(0, 0, w, h);
-          grad.addColorStop(0, '#040714');
-          grad.addColorStop(1, '#0f172a');
+          grad.addColorStop(0, '#040714'); grad.addColorStop(1, '#0f172a');
           this.#mainCtx.fillStyle = grad;
           this.#mainCtx.fillRect(0, 0, w, h);
 
-          // Render ghost mesh
-          for (let x = 0; x < w; x += 22) {
-            this.#mainCtx.strokeStyle = 'rgba(139, 92, 246, 0.1)';
-            this.#mainCtx.strokeRect(x, 0, 22, h);
-          }
-
-          // Target cut silhouette
           this.#drawJigsaw(this.#mainCtx, this.#puzzleTargetX, this.#puzzleTargetY, size);
           this.#mainCtx.fillStyle = 'rgba(0, 0, 0, 0.85)';
           this.#mainCtx.fill();
@@ -994,7 +1122,6 @@
           this.#mainCtx.lineWidth = 2;
           this.#mainCtx.stroke();
 
-          // Draggable ghost piece
           const maxTrack = this.sliderTrack.clientWidth - this.sliderThumb.clientWidth - 4;
           const pieceX = (this.#sliderX / maxTrack) * (w - size - 20);
 
@@ -1040,9 +1167,6 @@
         }
       }
 
-      /**
-       * MODE 3: Phase Reticle
-       */
       #initReticle() {
         this.hudMode.innerText = 'MODE // PHASE_RETICLE';
         document.getElementById('sliderHint').innerText = 'Rotate phase angle to lock target';
@@ -1055,15 +1179,12 @@
           this.#mainCtx.fillRect(0, 0, w, h);
 
           const cx = w / 2, cy = h / 2, r = 55;
-
-          // Quantum Ring
           this.#mainCtx.strokeStyle = 'rgba(139, 92, 246, 0.25)';
           this.#mainCtx.lineWidth = 3;
           this.#mainCtx.beginPath();
           this.#mainCtx.arc(cx, cy, r, 0, Math.PI * 2);
           this.#mainCtx.stroke();
 
-          // Target Core
           const tx = cx + Math.cos(this.#gyroTargetAngle) * r;
           const ty = cy + Math.sin(this.#gyroTargetAngle) * r;
           this.#mainCtx.fillStyle = 'var(--cyan)';
@@ -1072,9 +1193,7 @@
           this.#mainCtx.beginPath();
           this.#mainCtx.arc(tx, ty, 7, 0, Math.PI * 2);
           this.#mainCtx.fill();
-          this.#mainCtx.shadowBlur = 0;
 
-          // User Reticle
           const maxTrack = this.sliderTrack.clientWidth - this.sliderThumb.clientWidth - 4;
           this.#gyroUserAngle = (this.#sliderX / maxTrack) * Math.PI * 2;
 
@@ -1104,9 +1223,6 @@
         }
       }
 
-      /**
-       * MODE 4: Ghost Audio FFT
-       */
       #initAudio() {
         this.hudMode.innerText = 'MODE // GHOST_AUDIO_FFT';
         this.audioPlayBtn.classList.remove('hidden');
@@ -1121,7 +1237,6 @@
           this.#mainCtx.fillStyle = '#02040a';
           this.#mainCtx.fillRect(0, 0, w, h);
 
-          // Simulated Audio FFT Waves
           this.#mainCtx.strokeStyle = 'var(--cyan)';
           this.#mainCtx.lineWidth = 2;
           this.#mainCtx.beginPath();
@@ -1145,9 +1260,8 @@
       }
 
       #triggerSuccess(msg) {
-        // Honeypot trap check
-        if (document.getElementById('zcap_ghost_trap').value !== '') {
-          this.#triggerFailure('Automated Bot Signature Intercepted');
+        if (!this.#powSolvedPayload) {
+          this.#triggerFailure(`PoW mining in progress (Target D=${this.powSelect.value})...`);
           return;
         }
 
@@ -1156,18 +1270,16 @@
         this.synth.playSuccess();
         this.confetti.burst();
 
-        this.status.innerHTML = `✓ ${msg}`;
+        this.status.innerHTML = `✓ ${msg} + PoW Validated`;
         this.status.className = 'status-panel success';
         document.getElementById('ambientGlow').style.background = 'radial-gradient(circle, var(--success-glow), transparent 70%)';
 
         const attestation = {
-          shield: 'ZCap_GHOST_v4.2',
+          shield: 'ZCap_PoW_MultiCore_v6',
           verified: true,
           mode: this.#mode,
-          entropy: `${this.#entropy.toFixed(1)}%`,
-          powProof: this.#powProof,
-          timestamp: Date.now(),
-          jwtAttestation: `eyJhbGciOiJFUzI1NiJ9.${btoa(JSON.stringify({ zcap: true, ts: Date.now() }))}.zcap_ghost_sig`
+          proofOfWork: this.#powSolvedPayload,
+          timestamp: Date.now()
         };
 
         this.proofBox.innerText = JSON.stringify(attestation, null, 2);
@@ -1185,9 +1297,8 @@
       }
     }
 
-    // Launch ZCap
     document.addEventListener('DOMContentLoaded', () => {
-      window.zcap = new ZCapEngine();
+      window.zcap = new ZCapMaster();
     });
   </script>
 </body>
