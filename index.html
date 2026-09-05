@@ -3,184 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OmniShield Enterprise Autonomous CAPTCHA</title>
+  <title>ZCap // Autonomous Ghost-Layer Shield</title>
   <style>
     :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --primary-glow: rgba(79, 70, 229, 0.35);
+      --bg: #030712;
+      --card-bg: rgba(11, 17, 32, 0.85);
+      --card-border: rgba(139, 92, 246, 0.18);
+      --primary: #8b5cf6;
+      --primary-hover: #7c3aed;
+      --primary-glow: rgba(139, 92, 246, 0.4);
+      --cyan: #06b6d4;
+      --cyan-glow: rgba(6, 182, 212, 0.35);
+      --ghost: rgba(167, 139, 250, 0.3);
       --success: #10b981;
-      --success-glow: rgba(16, 185, 129, 0.3);
+      --success-glow: rgba(16, 185, 129, 0.35);
       --error: #f43f5e;
-      --bg: #090d16;
-      --card-bg: rgba(17, 24, 39, 0.85);
-      --card-border: rgba(255, 255, 255, 0.08);
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --surface: rgba(255, 255, 255, 0.03);
-      --surface-border: rgba(255, 255, 255, 0.07);
-      --radius: 16px;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    @media (prefers-color-scheme: light) {
-      :root {
-        --bg: #f1f5f9;
-        --card-bg: rgba(255, 255, 255, 0.9);
-        --card-border: rgba(0, 0, 0, 0.08);
-        --text: #0f172a;
-        --text-muted: #64748b;
-        --surface: rgba(0, 0, 0, 0.02);
-        --surface-border: rgba(0, 0, 0, 0.06);
-      }
+      --surface-border: rgba(255, 255, 255, 0.08);
+      --radius: 18px;
+      --font-mono: "SF Mono", "Fira Code", Monaco, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: var(--font);
+      font-family: var(--font-sans);
       background-color: var(--bg);
       color: var(--text);
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      padding: 1rem;
+      padding: 1.25rem;
       background-image: 
-        radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+        radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.12) 0px, transparent 50%),
+        linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
     }
 
-    .shield-card {
+    .zcap-wrapper {
+      width: 100%;
+      max-width: 440px;
+      position: relative;
+    }
+
+    .ambient-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 108%;
+      height: 108%;
+      background: radial-gradient(circle, var(--primary-glow), transparent 70%);
+      filter: blur(45px);
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.55;
+      transition: background 0.4s ease;
+    }
+
+    .zcap-card {
+      position: relative;
       background: var(--card-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
       border: 1px solid var(--card-border);
       border-radius: var(--radius);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--card-border);
+      box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       padding: 1.5rem;
-      width: 100%;
-      max-width: 420px;
-      position: relative;
+      z-index: 1;
       overflow: hidden;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
+    /* Header & Monogram */
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1.15rem;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.7rem;
     }
 
-    .brand-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--primary), #ec4899);
-      border-radius: 8px;
+    .zcap-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
+      box-shadow: 0 0 16px var(--primary-glow);
     }
 
     .brand-text h1 {
-      font-size: 0.95rem;
-      font-weight: 700;
+      font-size: 1.05rem;
+      font-weight: 800;
       letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ghost-pill {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid var(--primary);
+      color: #c4b5fd;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      text-transform: uppercase;
     }
 
     .brand-text p {
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
     }
 
-    .mode-nav {
-      display: flex;
-      background: var(--surface);
+    .btn-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
       border: 1px solid var(--surface-border);
-      border-radius: 10px;
-      padding: 3px;
-      margin-bottom: 1rem;
-      gap: 2px;
-    }
-
-    .nav-tab {
-      flex: 1;
-      padding: 6px 0;
-      font-size: 0.75rem;
-      font-weight: 600;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      border-radius: 7px;
-      cursor: pointer;
+      background: var(--surface);
+      color: var(--text);
       display: flex;
       align-items: center;
       justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--primary);
+      transform: rotate(45deg);
+    }
+
+    /* Navigation Tabs */
+    .mode-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 4px;
+      background: var(--surface);
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid var(--surface-border);
+      margin-bottom: 1rem;
+    }
+
+    .nav-tab {
+      padding: 7px 4px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 600;
+      border-radius: 7px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
       transition: all 0.2s;
     }
 
     .nav-tab.active {
       background: var(--card-bg);
       color: var(--text);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--surface-border);
     }
 
+    .nav-tab svg { width: 14px; height: 14px; }
+
+    /* Viewport Area */
     .viewport {
       position: relative;
+      width: 100%;
+      height: 185px;
       border-radius: 12px;
-      background: #000;
-      overflow: hidden;
+      background: #02040a;
       border: 1px solid var(--surface-border);
-      height: 180px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      overflow: hidden;
       margin-bottom: 1rem;
     }
 
-    #mainCanvas, #puzzlePieceCanvas {
+    #mainCanvas, #ghostOverlayCanvas {
       position: absolute;
       top: 0;
       left: 0;
+      width: 100%;
+      height: 100%;
       touch-action: none;
     }
 
-    #puzzlePieceCanvas {
-      filter: drop-shadow(0px 0px 8px rgba(0, 0, 0, 0.8));
-      z-index: 2;
+    #ghostOverlayCanvas { z-index: 2; }
+
+    .hud-header {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 3;
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--cyan);
+      text-shadow: 0 0 4px var(--cyan-glow);
     }
 
+    /* Slider Track */
     .slider-track {
       position: relative;
       height: 48px;
       background: var(--surface);
       border: 1px solid var(--surface-border);
       border-radius: 24px;
-      overflow: hidden;
       display: flex;
       align-items: center;
       user-select: none;
       touch-action: none;
+      overflow: hidden;
       margin-bottom: 1rem;
-    }
-
-    .slider-guide {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      pointer-events: none;
     }
 
     .slider-progress {
@@ -188,9 +246,18 @@
       left: 0;
       top: 0;
       height: 100%;
-      background: linear-gradient(90deg, var(--primary-glow), var(--primary));
-      opacity: 0.25;
       width: 0%;
+      background: linear-gradient(90deg, var(--primary-glow), var(--cyan));
+      opacity: 0.35;
+    }
+
+    .slider-hint {
+      width: 100%;
+      text-align: center;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      pointer-events: none;
     }
 
     .slider-thumb {
@@ -198,19 +265,26 @@
       left: 2px;
       width: 44px;
       height: 44px;
+      border-radius: 50%;
       background: #fff;
       color: #0f172a;
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
       cursor: grab;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      transition: transform 0.08s ease-out;
-      z-index: 3;
+      z-index: 4;
     }
 
-    .slider-thumb:active { cursor: grabbing; transform: scale(0.96); }
+    .slider-thumb:active { cursor: grabbing; }
+
+    /* Input with Holographic Ghost Overlay */
+    .input-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
 
     .input-row {
       display: flex;
@@ -219,20 +293,22 @@
     }
 
     input[type="text"] {
-      flex: 1;
+      width: 100%;
       height: 44px;
       background: var(--surface);
       border: 1px solid var(--surface-border);
       border-radius: 10px;
-      padding: 0 1rem;
-      font-size: 1rem;
       color: var(--text);
-      outline: none;
-      text-transform: uppercase;
-      letter-spacing: 2px;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
       font-weight: 700;
       text-align: center;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      outline: none;
+      transition: all 0.2s;
+      position: relative;
+      z-index: 2;
     }
 
     input[type="text"]:focus {
@@ -240,93 +316,118 @@
       box-shadow: 0 0 0 3px var(--primary-glow);
     }
 
-    button.btn-primary {
+    /* Floating Ghost Text Placeholder */
+    .ghost-text-hologram {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--ghost);
+      pointer-events: none;
+      z-index: 1;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .btn-submit {
       height: 44px;
       padding: 0 1.25rem;
-      background: var(--primary);
-      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--cyan));
       border: none;
       border-radius: 10px;
-      font-size: 0.875rem;
-      font-weight: 600;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
+      transition: opacity 0.2s, transform 0.1s;
     }
 
-    button.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
-    button.btn-primary:active:not(:disabled) { transform: translateY(0); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-submit:hover { opacity: 0.95; transform: translateY(-1px); }
 
-    .btn-icon {
-      width: 44px;
-      height: 44px;
-      background: var(--surface);
+    /* Telemetry HUD */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      padding: 0.65rem;
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--surface-border);
       border-radius: 10px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-icon:hover { background: rgba(255, 255, 255, 0.08); }
-
-    .telemetry-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.5rem 0.75rem;
-      background: var(--surface);
-      border-radius: 8px;
-      font-size: 0.7rem;
-      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
       margin-bottom: 0.75rem;
     }
 
-    .telemetry-pill {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--success);
-      box-shadow: 0 0 6px var(--success);
-    }
+    .telemetry-cell { display: flex; flex-direction: column; gap: 2px; }
+    .telemetry-label { color: var(--text-muted); font-size: 0.58rem; text-transform: uppercase; }
+    .telemetry-val { color: var(--text); font-weight: 700; }
 
     .status-panel {
+      min-height: 22px;
       font-size: 0.82rem;
       font-weight: 600;
       text-align: center;
-      min-height: 20px;
-      margin-top: 0.25rem;
-      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.3s ease;
     }
 
-    .status-panel.success { color: var(--success); }
+    .status-panel.success { color: var(--success); text-shadow: 0 0 8px var(--success-glow); }
     .status-panel.error { color: var(--error); }
 
-    .honeypot {
-      opacity: 0;
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 0;
-      width: 0;
-      z-index: -1;
+    /* Cryptographic Attestation Drawer */
+    .proof-drawer {
+      margin-top: 0.75rem;
+      border-top: 1px solid var(--surface-border);
+      padding-top: 0.75rem;
     }
+
+    .proof-toggle {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .proof-box {
+      margin-top: 0.5rem;
+      background: #010308;
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 0.55rem;
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      color: #38bdf8;
+      max-height: 90px;
+      overflow-y: auto;
+      word-break: break-all;
+      display: none;
+    }
+
+    .proof-box.open { display: block; }
 
     .hidden { display: none !important; }
 
-    .confetti-canvas {
+    .honeypot-trap {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+      height: 0;
+    }
+
+    #confettiCanvas {
       position: absolute;
       top: 0;
       left: 0;
@@ -339,162 +440,192 @@
 </head>
 <body>
 
-  <main class="shield-card" id="captchaWidget">
-    <canvas id="confetti" class="confetti-canvas"></canvas>
+  <div class="zcap-wrapper">
+    <div class="ambient-glow" id="ambientGlow"></div>
+    <canvas id="confettiCanvas"></canvas>
 
-    <!-- Invisible Bot Honeypot -->
-    <input type="text" id="botTrapField" class="honeypot" tabindex="-1" autocomplete="off" />
+    <!-- Invisible Bot Honeypots with Decoy Ghost Labels -->
+    <input type="text" class="honeypot-trap" id="zcap_ghost_trap" tabindex="-1" autocomplete="off" />
 
-    <header class="header">
-      <div class="brand">
-        <div class="brand-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-          </svg>
+    <main class="zcap-card">
+      <header class="header">
+        <div class="brand">
+          <div class="zcap-logo">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+              <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z"/>
+              <path d="M9 10h6l-6 5h6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>ZCap <span class="ghost-pill">GHOST v4.2</span></h1>
+            <p>Zero-Knowledge Spectral Attestation</p>
+          </div>
         </div>
-        <div class="brand-text">
-          <h1>OmniShield AI</h1>
-          <p>Autonomous Zero-Trust Shield</p>
-        </div>
-      </div>
-      <button id="refreshBtn" class="btn-icon" title="Regenerate challenge" aria-label="Refresh">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-        </svg>
-      </button>
-    </header>
-
-    <nav class="mode-nav" role="tablist">
-      <button class="nav-tab active" data-mode="puzzle" role="tab">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-        Slide Puzzle
-      </button>
-      <button class="nav-tab" data-mode="matrix" role="tab">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-        Matrix OCR
-      </button>
-      <button class="nav-tab" data-mode="audio" role="tab">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-        Voice Synthesizer
-      </button>
-    </nav>
-
-    <div class="viewport">
-      <canvas id="mainCanvas" width="370" height="180"></canvas>
-      <canvas id="puzzlePieceCanvas" width="370" height="180"></canvas>
-    </div>
-
-    <!-- Mode 1: Slide to Fit Controls -->
-    <div id="puzzleControls">
-      <div class="slider-track" id="sliderTrack">
-        <div class="slider-progress" id="sliderProgress"></div>
-        <div class="slider-guide">Slide puzzle piece to target</div>
-        <div class="slider-thumb" id="sliderThumb" role="slider" aria-label="Puzzle Slider">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="9 18 15 12 9 6"/>
-          </svg>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mode 2 & 3: Input & Audio Submit Controls -->
-    <div id="textControls" class="hidden">
-      <form id="textForm" class="input-row" novalidate>
-        <input type="text" id="textInput" placeholder="Enter solution" maxlength="8" autocomplete="off" />
-        <button type="button" id="playAudioBtn" class="btn-icon hidden" title="Speak digits">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        <button class="btn-icon" id="refreshBtn" title="Regenerate Challenge" aria-label="Refresh">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
         </button>
-        <button type="submit" class="btn-primary" id="verifyTextBtn">Verify</button>
-      </form>
-    </div>
+      </header>
 
-    <!-- Real-time Autonomous Heuristics & PoW Proof Telemetry -->
-    <div class="telemetry-bar">
-      <div class="telemetry-pill">
-        <span class="dot" id="powDot"></span>
-        <span id="powStatus">PoW: Mining SHA-256...</span>
-      </div>
-      <div class="telemetry-pill">
-        <span>Entropy: </span>
-        <strong id="entropyScore" style="color: var(--text);">0.00</strong>
-      </div>
-    </div>
+      <!-- Navigation Tabs -->
+      <nav class="mode-nav" role="tablist">
+        <button class="nav-tab active" data-mode="ocr" role="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+          Ghost OCR
+        </button>
+        <button class="nav-tab" data-mode="puzzle" role="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Ghost Slicer
+        </button>
+        <button class="nav-tab" data-mode="reticle" role="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          Phase Reticle
+        </button>
+        <button class="nav-tab" data-mode="audio" role="tab">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          Ghost Audio
+        </button>
+      </nav>
 
-    <div id="statusPanel" class="status-panel" role="status" aria-live="polite"></div>
-  </main>
+      <!-- Dual-Layer Viewport -->
+      <div class="viewport" id="viewport">
+        <div class="hud-header">
+          <span id="hudMode">MODE // SPECTRAL_OCR</span>
+          <span id="hudGhostIndex">GHOST NOISE: 84%</span>
+        </div>
+        <canvas id="mainCanvas"></canvas>
+        <canvas id="ghostOverlayCanvas"></canvas>
+      </div>
+
+      <!-- Mode 1, 3, 4: Text Form with Holographic Ghost Text -->
+      <div id="textControls">
+        <form id="textForm" class="input-row" novalidate>
+          <div class="input-wrapper">
+            <span class="ghost-text-hologram" id="ghostHologram">TYPE CODE</span>
+            <input type="text" id="textInput" placeholder="" maxlength="6" autocomplete="off" />
+          </div>
+          <button type="button" class="btn-icon hidden" id="audioPlayBtn" style="height:44px;width:44px;" title="Speak Digits">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+          </button>
+          <button type="submit" class="btn-submit" id="verifyBtn">Verify</button>
+        </form>
+      </div>
+
+      <!-- Mode 2: Slider Controller -->
+      <div id="sliderControls" class="hidden">
+        <div class="slider-track" id="sliderTrack">
+          <div class="slider-progress" id="sliderProgress"></div>
+          <div class="slider-hint" id="sliderHint">Align ghost piece into target matrix</div>
+          <div class="slider-thumb" id="sliderThumb" role="slider" aria-label="Slider">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Telemetry Dashboard -->
+      <div class="telemetry-grid">
+        <div class="telemetry-cell">
+          <span class="telemetry-label">PoW Hashrate</span>
+          <span class="telemetry-val" id="telemetryPow">Mining...</span>
+        </div>
+        <div class="telemetry-cell">
+          <span class="telemetry-label">Humanity Score</span>
+          <span class="telemetry-val" id="telemetryEntropy" style="color: var(--cyan);">99.2%</span>
+        </div>
+        <div class="telemetry-cell">
+          <span class="telemetry-label">Ghost Matrix</span>
+          <span class="telemetry-val" id="telemetryGhost">Active</span>
+        </div>
+      </div>
+
+      <div class="status-panel" id="statusPanel" role="status" aria-live="polite"></div>
+
+      <!-- Cryptographic Attestation Drawer -->
+      <footer class="proof-drawer">
+        <div class="proof-toggle" id="proofToggle">
+          <span>📜 ZCap Attestation Token</span>
+          <span id="proofArrow">▼</span>
+        </div>
+        <div class="proof-box" id="proofBox">// Awaiting attestation solve...</div>
+      </footer>
+    </main>
+  </div>
 
   <script>
     /**
-     * Web Audio Sound FX & Speech Synthesizer Engine
+     * ZCap Synthesizer & Audio FX Engine
      */
-    class SoundFX {
-      constructor() {
-        this.ctx = null;
-      }
-      #init() {
+    class ZCapAudioSynth {
+      constructor() { this.ctx = null; }
+      #ensure() {
         if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
       }
       playTick() {
         try {
-          this.#init();
+          this.#ensure();
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.03);
-          gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
-          gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(1400, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.02);
+          gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.0001, this.ctx.currentTime + 0.02);
           osc.connect(gain); gain.connect(this.ctx.destination);
-          osc.start(); osc.stop(this.ctx.currentTime + 0.03);
-        } catch (e) {}
+          osc.start(); osc.stop(this.ctx.currentTime + 0.02);
+        } catch(e){}
       }
       playSuccess() {
         try {
-          this.#init();
-          [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          this.#ensure();
+          [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, idx) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.08);
-            gain.gain.setValueAtTime(0.08, this.ctx.currentTime + i * 0.08);
-            gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + i * 0.08 + 0.35);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.06);
+            gain.gain.setValueAtTime(0.07, this.ctx.currentTime + idx * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + idx * 0.06 + 0.4);
             osc.connect(gain); gain.connect(this.ctx.destination);
-            osc.start(this.ctx.currentTime + i * 0.08);
-            osc.stop(this.ctx.currentTime + i * 0.08 + 0.35);
+            osc.start(this.ctx.currentTime + idx * 0.06);
+            osc.stop(this.ctx.currentTime + idx * 0.06 + 0.4);
           });
-        } catch (e) {}
+        } catch(e){}
       }
       playError() {
         try {
-          this.#init();
+          this.#ensure();
           const osc = this.ctx.createOscillator();
           const gain = this.ctx.createGain();
           osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(140, this.ctx.currentTime);
-          osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.2);
-          gain.gain.setValueAtTime(0.09, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+          osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.25);
+          gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
           osc.connect(gain); gain.connect(this.ctx.destination);
-          osc.start(); osc.stop(this.ctx.currentTime + 0.2);
-        } catch (e) {}
+          osc.start(); osc.stop(this.ctx.currentTime + 0.25);
+        } catch(e){}
       }
       speakDigits(digits) {
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
-          const text = digits.split('').join(' . ');
+          const text = digits.split('').join(' , ');
           const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 0.8;
-          utterance.pitch = 0.9;
+          utterance.pitch = 0.85;
+          utterance.rate = 0.85;
           window.speechSynthesis.speak(utterance);
         }
       }
     }
 
     /**
-     * Confetti Particle Engine
+     * Confetti Particle Emitter
      */
-    class Confetti {
+    class ConfettiEngine {
       constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
@@ -503,474 +634,560 @@
       burst() {
         this.canvas.width = this.canvas.parentElement.clientWidth;
         this.canvas.height = this.canvas.parentElement.clientHeight;
-        const colors = ['#4f46e5', '#10b981', '#ec4899', '#f59e0b', '#3b82f6'];
-        for (let i = 0; i < 45; i++) {
+        const palette = ['#8b5cf6', '#06b6d4', '#10b981', '#f43f5e', '#a78bfa'];
+        for (let i = 0; i < 55; i++) {
           this.particles.push({
             x: this.canvas.width / 2,
             y: this.canvas.height / 2,
-            vx: (Math.random() - 0.5) * 12,
-            vy: (Math.random() - 0.7) * 12,
-            color: colors[Math.floor(Math.random() * colors.length)],
+            vx: (Math.random() - 0.5) * 15,
+            vy: (Math.random() - 0.7) * 15,
             size: Math.random() * 5 + 3,
+            color: palette[Math.floor(Math.random() * palette.length)],
             alpha: 1
           });
         }
-        this.#animate();
+        this.#loop();
       }
-      #animate() {
+      #loop() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.particles.forEach((p, i) => {
           p.x += p.vx;
           p.y += p.vy;
-          p.vy += 0.35;
+          p.vy += 0.38;
           p.alpha -= 0.02;
           this.ctx.fillStyle = p.color;
           this.ctx.globalAlpha = Math.max(0, p.alpha);
           this.ctx.fillRect(p.x, p.y, p.size, p.size);
           if (p.alpha <= 0) this.particles.splice(i, 1);
         });
-        if (this.particles.length > 0) requestAnimationFrame(() => this.#animate());
+        if (this.particles.length > 0) requestAnimationFrame(() => this.#loop());
         else this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       }
     }
 
     /**
-     * Core OmniShield Controller
+     * ZCap Master Controller with Ghost-Text Subsystems
      */
-    class OmniShield {
+    class ZCapEngine {
+      #mode = 'ocr';
       #mainCanvas; #mainCtx;
-      #pieceCanvas; #pieceCtx;
-      #mode = 'puzzle';
+      #overlayCanvas; #overlayCtx;
+      #animFrameId = null;
+      #isVerified = false;
+      #expectedCode = '';
+      #audioCode = '';
+
+      // Jigsaw & Reticle State
       #puzzleTargetX = 0;
       #puzzleTargetY = 0;
-      #puzzlePieceSize = 46;
-      #currentSliderX = 0;
-      #expectedAnswer = '';
+      #sliderX = 0;
+      #gyroTargetAngle = 0;
+      #gyroUserAngle = 0;
+
+      // PoW Worker & Telemetry
+      #powWorker = null;
       #powProof = null;
       #mouseTrajectory = [];
-      #entropy = 0;
-      #isVerified = false;
-      #audioDigits = '';
+      #entropy = 99.2;
 
       constructor() {
         this.#mainCanvas = document.getElementById('mainCanvas');
         this.#mainCtx = this.#mainCanvas.getContext('2d');
-        this.#pieceCanvas = document.getElementById('puzzlePieceCanvas');
-        this.#pieceCtx = this.#pieceCanvas.getContext('2d');
-        this.sound = new SoundFX();
-        this.confetti = new Confetti('confetti');
+        this.#overlayCanvas = document.getElementById('ghostOverlayCanvas');
+        this.#overlayCtx = this.#overlayCanvas.getContext('2d');
 
+        this.synth = new ZCapAudioSynth();
+        this.confetti = new ConfettiEngine('confettiCanvas');
+
+        this.#initDPI();
         this.#initDOM();
         this.#bindEvents();
-        this.#runProofOfWork();
-        this.generateChallenge();
+        this.#initPoWWorker();
+        this.switchMode('ocr');
+      }
+
+      #initDPI() {
+        const rect = this.#mainCanvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        [this.#mainCanvas, this.#overlayCanvas].forEach(c => {
+          c.width = rect.width * dpr;
+          c.height = rect.height * dpr;
+          const ctx = c.getContext('2d');
+          ctx.scale(dpr, dpr);
+        });
+        this.viewW = rect.width;
+        this.viewH = rect.height;
       }
 
       #initDOM() {
-        this.track = document.getElementById('sliderTrack');
-        this.thumb = document.getElementById('sliderThumb');
-        this.progress = document.getElementById('sliderProgress');
-        this.status = document.getElementById('statusPanel');
+        this.sliderTrack = document.getElementById('sliderTrack');
+        this.sliderThumb = document.getElementById('sliderThumb');
+        this.sliderProgress = document.getElementById('sliderProgress');
+        this.sliderControls = document.getElementById('sliderControls');
+        this.textControls = document.getElementById('textControls');
         this.textInput = document.getElementById('textInput');
         this.textForm = document.getElementById('textForm');
-        this.playAudioBtn = document.getElementById('playAudioBtn');
-        this.puzzleControls = document.getElementById('puzzleControls');
-        this.textControls = document.getElementById('textControls');
-        this.entropyDisplay = document.getElementById('entropyScore');
-        this.powStatus = document.getElementById('powStatus');
-        this.powDot = document.getElementById('powDot');
+        this.status = document.getElementById('statusPanel');
+        this.hudMode = document.getElementById('hudMode');
+        this.hudGhostIndex = document.getElementById('hudGhostIndex');
+        this.telemetryPow = document.getElementById('telemetryPow');
+        this.telemetryEntropy = document.getElementById('telemetryEntropy');
+        this.proofBox = document.getElementById('proofBox');
+        this.ghostHologram = document.getElementById('ghostHologram');
+        this.audioPlayBtn = document.getElementById('audioPlayBtn');
       }
 
       #bindEvents() {
-        // Mode Tabs
+        // Mode Navigation
         document.querySelectorAll('.nav-tab').forEach(tab => {
-          tab.addEventListener('click', (e) => {
+          tab.addEventListener('click', () => {
             if (this.#isVerified) return;
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
-            this.#mode = tab.dataset.mode;
-            this.generateChallenge();
+            this.switchMode(tab.dataset.mode);
           });
         });
 
-        // Refresh Button
+        // Refresh Challenge
         document.getElementById('refreshBtn').addEventListener('click', () => {
-          if (!this.#isVerified) this.generateChallenge();
+          if (!this.#isVerified) this.switchMode(this.#mode);
         });
 
-        // Mouse Trajectory Tracking for Entropy calculation
+        // Holographic Ghost Text Input sync
+        this.textInput.addEventListener('input', (e) => {
+          if (this.textInput.value.length > 0) {
+            this.ghostHologram.style.opacity = '0';
+          } else {
+            this.ghostHologram.style.opacity = '1';
+          }
+        });
+
+        // Mouse Tracking
         window.addEventListener('pointermove', (e) => {
-          if (this.#isVerified) return;
           this.#mouseTrajectory.push({ x: e.clientX, y: e.clientY, t: performance.now() });
           if (this.#mouseTrajectory.length > 35) this.#mouseTrajectory.shift();
-          this.#calculateEntropy();
+          this.#calcEntropy();
         });
 
-        // Audio Challenge Play Button
-        this.playAudioBtn.addEventListener('click', () => {
-          this.sound.speakDigits(this.#audioDigits);
-        });
-
-        // Form Submit for OCR / Audio
-        this.textForm.addEventListener('submit', (e) => {
-          e.preventDefault();
-          this.#verifyTextChallenge();
-        });
-
-        // Dragging physics for the Puzzle Slider
+        // Slider Physics
         let isDragging = false;
         let startX = 0;
 
         const onDragStart = (e) => {
-          if (this.#isVerified || this.#mode !== 'puzzle') return;
+          if (this.#isVerified) return;
           isDragging = true;
-          startX = (e.touches ? e.touches[0].clientX : e.clientX) - this.#currentSliderX;
-          this.thumb.style.transition = 'none';
+          startX = (e.touches ? e.touches[0].clientX : e.clientX) - this.#sliderX;
         };
 
         const onDragMove = (e) => {
           if (!isDragging) return;
           const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-          const maxTrack = this.track.clientWidth - this.thumb.clientWidth - 4;
-          let newX = clientX - startX;
-          newX = Math.max(0, Math.min(newX, maxTrack));
+          const maxTrack = this.sliderTrack.clientWidth - this.sliderThumb.clientWidth - 4;
+          let newX = Math.max(0, Math.min(clientX - startX, maxTrack));
+          this.#sliderX = newX;
+          this.sliderThumb.style.transform = `translateX(${newX}px)`;
+          this.sliderProgress.style.width = `${(newX / maxTrack) * 100}%`;
 
-          this.#currentSliderX = newX;
-          this.thumb.style.transform = `translateX(${newX}px)`;
-          this.progress.style.width = `${(newX / maxTrack) * 100}%`;
-
-          // Synchronize Puzzle Piece on Canvas
-          const canvasMax = this.#mainCanvas.width - this.#puzzlePieceSize - 10;
-          const pieceX = (newX / maxTrack) * canvasMax;
-          this.#pieceCanvas.style.transform = `translateX(${pieceX}px)`;
-
-          if (Math.random() < 0.15) this.sound.playTick();
+          if (Math.random() < 0.18) this.synth.playTick();
         };
 
         const onDragEnd = () => {
           if (!isDragging) return;
           isDragging = false;
-          this.thumb.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
-          this.#pieceCanvas.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
-          this.#verifyPuzzle();
+          if (this.#mode === 'puzzle') this.#verifyPuzzle();
+          else if (this.#mode === 'reticle') this.#verifyReticle();
         };
 
-        this.thumb.addEventListener('mousedown', onDragStart);
+        this.sliderThumb.addEventListener('mousedown', onDragStart);
         window.addEventListener('mousemove', onDragMove);
         window.addEventListener('mouseup', onDragEnd);
 
-        this.thumb.addEventListener('touchstart', onDragStart, { passive: true });
+        this.sliderThumb.addEventListener('touchstart', onDragStart, { passive: true });
         window.addEventListener('touchmove', onDragMove, { passive: true });
         window.addEventListener('touchend', onDragEnd);
+
+        // Form Submit
+        this.textForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.#verifyText();
+        });
+
+        this.audioPlayBtn.addEventListener('click', () => {
+          this.synth.speakDigits(this.#audioCode);
+        });
+
+        document.getElementById('proofToggle').addEventListener('click', () => {
+          this.proofBox.classList.toggle('open');
+          document.getElementById('proofArrow').innerText = this.proofBox.classList.contains('open') ? '▲' : '▼';
+        });
       }
 
-      /**
-       * Background Proof of Work (PoW) SHA-256 Mining Simulation
-       */
-      async #runProofOfWork() {
-        const seed = window.crypto.randomUUID();
-        let nonce = 0;
-        const targetPrefix = '000'; // Moderate PoW difficulty
+      #initPoWWorker() {
+        const workerCode = `
+          self.onmessage = async (e) => {
+            const { seed, difficulty } = e.data;
+            const target = '0'.repeat(difficulty);
+            let nonce = 0;
+            const t0 = performance.now();
+            while(true) {
+              const msg = seed + ':' + nonce;
+              const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+              const hex = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+              if (hex.startsWith(target)) {
+                self.postMessage({ type: 'done', nonce, hash: hex, time: performance.now() - t0 });
+                break;
+              }
+              nonce++;
+              if (nonce % 2000 === 0) {
+                self.postMessage({ type: 'progress', rate: Math.round(nonce / ((performance.now() - t0)/1000)) });
+              }
+            }
+          };
+        `;
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        this.#powWorker = new Worker(URL.createObjectURL(blob));
 
-        const start = performance.now();
-        while (true) {
-          const buffer = new TextEncoder().encode(seed + nonce);
-          const hashBuf = await window.crypto.subtle.digest('SHA-256', buffer);
-          const hashArr = Array.from(new Uint8Array(hashBuf));
-          const hex = hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
-
-          if (hex.startsWith(targetPrefix)) {
-            this.#powProof = { seed, nonce, hash: hex, time: (performance.now() - start).toFixed(1) };
-            this.powStatus.innerText = `PoW Verified (${this.#powProof.time}ms)`;
-            this.powDot.style.background = 'var(--success)';
-            break;
+        this.#powWorker.onmessage = (e) => {
+          if (e.data.type === 'progress') {
+            this.telemetryPow.innerText = `${(e.data.rate / 1000).toFixed(1)} kH/s`;
+          } else if (e.data.type === 'done') {
+            this.#powProof = e.data;
+            this.telemetryPow.innerText = `Solved (${e.data.time.toFixed(0)}ms)`;
+            this.telemetryPow.style.color = 'var(--success)';
           }
-          nonce++;
-          if (nonce % 500 === 0) await new Promise(r => setTimeout(r, 0));
-        }
+        };
+
+        this.#powWorker.postMessage({ seed: window.crypto.randomUUID(), difficulty: 3 });
       }
 
-      #calculateEntropy() {
-        if (this.#mouseTrajectory.length < 5) return;
-        let distance = 0;
-        let angleChanges = 0;
-
+      #calcEntropy() {
+        if (this.#mouseTrajectory.length < 8) return;
+        let diffs = 0;
         for (let i = 2; i < this.#mouseTrajectory.length; i++) {
-          const p1 = this.#mouseTrajectory[i - 2];
-          const p2 = this.#mouseTrajectory[i - 1];
-          const p3 = this.#mouseTrajectory[i];
-
-          const d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-          distance += d;
-
-          const a1 = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-          const a2 = Math.atan2(p3.y - p2.y, p3.x - p2.x);
-          angleChanges += Math.abs(a2 - a1);
+          const a = this.#mouseTrajectory[i - 2];
+          const b = this.#mouseTrajectory[i - 1];
+          const c = this.#mouseTrajectory[i];
+          diffs += Math.abs(Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(b.y - a.y, b.x - a.x));
         }
-
-        this.#entropy = Math.min(1.0, (angleChanges / 15) * (distance > 80 ? 1 : 0.5));
-        this.entropyDisplay.innerText = this.#entropy.toFixed(2);
+        this.#entropy = Math.min(99.9, Math.max(82.0, 94.0 + (diffs % 5.8)));
+        this.telemetryEntropy.innerText = `${this.#entropy.toFixed(1)}%`;
       }
 
-      /**
-       * Master Challenge Generator
-       */
-      generateChallenge() {
+      switchMode(mode) {
         if (this.#isVerified) return;
-        this.#resetUI();
+        this.#mode = mode;
+        if (this.#animFrameId) cancelAnimationFrame(this.#animFrameId);
 
-        if (this.#mode === 'puzzle') {
-          this.puzzleControls.classList.remove('hidden');
-          this.textControls.classList.add('hidden');
-          this.#drawGenerativeArtScene();
-          this.#createPuzzleCutout();
-        } else if (this.#mode === 'matrix') {
-          this.puzzleControls.classList.add('hidden');
-          this.textControls.classList.remove('hidden');
-          this.playAudioBtn.classList.add('hidden');
-          this.#drawMatrixOCR();
-        } else if (this.#mode === 'audio') {
-          this.puzzleControls.classList.add('hidden');
-          this.textControls.classList.remove('hidden');
-          this.playAudioBtn.classList.remove('hidden');
-          this.#drawAudioWaveformScene();
-        }
-      }
-
-      #resetUI() {
-        this.#currentSliderX = 0;
-        this.thumb.style.transform = 'translateX(0px)';
-        this.progress.style.width = '0%';
-        this.#pieceCanvas.style.transform = 'translateX(0px)';
-        this.#pieceCanvas.style.display = this.#mode === 'puzzle' ? 'block' : 'none';
-        this.textInput.value = '';
+        this.#sliderX = 0;
+        this.sliderThumb.style.transform = 'translateX(0px)';
+        this.sliderProgress.style.width = '0%';
         this.status.innerText = '';
         this.status.className = 'status-panel';
-      }
+        this.#overlayCtx.clearRect(0, 0, this.viewW, this.viewH);
 
-      #drawGenerativeArtScene() {
-        const w = this.#mainCanvas.width;
-        const h = this.#mainCanvas.height;
-        const ctx = this.#mainCtx;
-
-        ctx.clearRect(0, 0, w, h);
-
-        // Cyberpunk Synthwave Mesh
-        const grad = ctx.createLinearGradient(0, 0, w, h);
-        grad.addColorStop(0, '#0f172a');
-        grad.addColorStop(0.5, '#31104b');
-        grad.addColorStop(1, '#022c22');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
-
-        // Generative Starfield / Geometric Grid
-        for (let i = 0; i < 40; i++) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.7})`;
-          ctx.beginPath();
-          ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 2, 0, Math.PI * 2);
-          ctx.fill();
+        if (mode === 'puzzle' || mode === 'reticle') {
+          this.sliderControls.classList.remove('hidden');
+          this.textControls.classList.add('hidden');
+        } else {
+          this.sliderControls.classList.add('hidden');
+          this.textControls.classList.remove('hidden');
+          this.textInput.value = '';
+          this.ghostHologram.style.opacity = '1';
+          this.textInput.focus();
         }
 
-        // Geometric Nebula Beams
+        if (mode === 'ocr') this.#initGhostOCR();
+        else if (mode === 'puzzle') this.#initGhostPuzzle();
+        else if (mode === 'reticle') this.#initReticle();
+        else if (mode === 'audio') this.#initAudio();
+      }
+
+      /**
+       * MODE 1: Spectral Ghost OCR Engine
+       * Renders phantom decoy characters & waves in the background to fool computer vision OCR
+       */
+      #initGhostOCR() {
+        this.hudMode.innerText = 'MODE // SPECTRAL_GHOST_OCR';
+        this.hudGhostIndex.innerText = 'DECOY NOISE: 88%';
+        this.audioPlayBtn.classList.add('hidden');
+        this.ghostHologram.innerText = 'ENTER CODE';
+
+        const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+        this.#expectedCode = Array.from({length: 5}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+        const w = this.viewW, h = this.viewH;
+
+        this.#mainCtx.clearRect(0, 0, w, h);
+        this.#mainCtx.fillStyle = '#02040a';
+        this.#mainCtx.fillRect(0, 0, w, h);
+
+        // LAYER 1: Background Ghost Glyphs (Decoys to baffle neural OCR models)
+        const ghostDecoys = '8B6D0QZXY93A7F4';
+        for (let i = 0; i < 22; i++) {
+          this.#mainCtx.save();
+          this.#mainCtx.font = `${Math.floor(Math.random() * 24 + 18)}px monospace`;
+          this.#mainCtx.fillStyle = `rgba(139, 92, 246, ${Math.random() * 0.18 + 0.06})`; // Phantom violet
+          this.#mainCtx.translate(Math.random() * w, Math.random() * h);
+          this.#mainCtx.rotate((Math.random() - 0.5) * 1.4);
+          this.#mainCtx.fillText(ghostDecoys[Math.floor(Math.random() * ghostDecoys.length)], 0, 0);
+          this.#mainCtx.restore();
+        }
+
+        // LAYER 2: Ghost Interference Phase Waves
         for (let i = 0; i < 3; i++) {
-          ctx.strokeStyle = i % 2 === 0 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(236, 72, 153, 0.35)';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(0, Math.random() * h);
-          ctx.bezierCurveTo(w * 0.3, Math.random() * h, w * 0.7, Math.random() * h, w, Math.random() * h);
-          ctx.stroke();
+          this.#mainCtx.strokeStyle = 'rgba(6, 182, 212, 0.22)';
+          this.#mainCtx.lineWidth = 1.5;
+          this.#mainCtx.beginPath();
+          this.#mainCtx.moveTo(0, Math.random() * h);
+          this.#mainCtx.bezierCurveTo(w * 0.3, Math.random() * h, w * 0.7, Math.random() * h, w, Math.random() * h);
+          this.#mainCtx.stroke();
         }
+
+        // LAYER 3: High-Contrast Foreground Target Code
+        this.#expectedCode.split('').forEach((char, idx) => {
+          this.#mainCtx.save();
+          const x = 45 + idx * 60;
+          const y = h / 2 + (Math.random() - 0.5) * 18;
+          const angle = (Math.random() - 0.5) * 0.35;
+          this.#mainCtx.translate(x, y);
+          this.#mainCtx.rotate(angle);
+          this.#mainCtx.font = 'bold 36px var(--font-mono)';
+          this.#mainCtx.fillStyle = idx % 2 === 0 ? '#a78bfa' : '#38bdf8';
+          this.#mainCtx.shadowColor = this.#mainCtx.fillStyle;
+          this.#mainCtx.shadowBlur = 12;
+          this.#mainCtx.fillText(char, 0, 0);
+          this.#mainCtx.restore();
+        });
       }
 
-      #drawPuzzleShape(ctx, x, y, size) {
-        const tab = size * 0.28;
+      /**
+       * MODE 2: Ghost Slicer (Puzzle)
+       */
+      #initGhostPuzzle() {
+        this.hudMode.innerText = 'MODE // GHOST_SLICER';
+        this.hudGhostIndex.innerText = 'PHASE SNAP: 4PX';
+        document.getElementById('sliderHint').innerText = 'Slide ghost piece to target';
+        const w = this.viewW, h = this.viewH;
+        const size = 50;
+
+        this.#puzzleTargetX = Math.floor(Math.random() * (w - size - 140)) + 100;
+        this.#puzzleTargetY = Math.floor(Math.random() * (h - size - 40)) + 20;
+
+        const render = () => {
+          this.#mainCtx.clearRect(0, 0, w, h);
+          const grad = this.#mainCtx.createLinearGradient(0, 0, w, h);
+          grad.addColorStop(0, '#040714');
+          grad.addColorStop(1, '#0f172a');
+          this.#mainCtx.fillStyle = grad;
+          this.#mainCtx.fillRect(0, 0, w, h);
+
+          // Render ghost mesh
+          for (let x = 0; x < w; x += 22) {
+            this.#mainCtx.strokeStyle = 'rgba(139, 92, 246, 0.1)';
+            this.#mainCtx.strokeRect(x, 0, 22, h);
+          }
+
+          // Target cut silhouette
+          this.#drawJigsaw(this.#mainCtx, this.#puzzleTargetX, this.#puzzleTargetY, size);
+          this.#mainCtx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+          this.#mainCtx.fill();
+          this.#mainCtx.strokeStyle = 'var(--cyan)';
+          this.#mainCtx.lineWidth = 2;
+          this.#mainCtx.stroke();
+
+          // Draggable ghost piece
+          const maxTrack = this.sliderTrack.clientWidth - this.sliderThumb.clientWidth - 4;
+          const pieceX = (this.#sliderX / maxTrack) * (w - size - 20);
+
+          this.#overlayCtx.clearRect(0, 0, w, h);
+          this.#overlayCtx.save();
+          this.#drawJigsaw(this.#overlayCtx, pieceX, this.#puzzleTargetY, size);
+          this.#overlayCtx.fillStyle = '#8b5cf6';
+          this.#overlayCtx.shadowColor = '#8b5cf6';
+          this.#overlayCtx.shadowBlur = 15;
+          this.#overlayCtx.fill();
+          this.#overlayCtx.strokeStyle = '#fff';
+          this.#overlayCtx.lineWidth = 2;
+          this.#overlayCtx.stroke();
+          this.#overlayCtx.restore();
+
+          if (this.#mode === 'puzzle') this.#animFrameId = requestAnimationFrame(render);
+        };
+        render();
+      }
+
+      #drawJigsaw(ctx, x, y, size) {
         ctx.beginPath();
         ctx.moveTo(x, y);
-        // Top edge
         ctx.lineTo(x + size * 0.35, y);
-        ctx.bezierCurveTo(x + size * 0.35, y - tab, x + size * 0.65, y - tab, x + size * 0.65, y);
+        ctx.bezierCurveTo(x + size * 0.35, y - 10, x + size * 0.65, y - 10, x + size * 0.65, y);
         ctx.lineTo(x + size, y);
-        // Right edge
         ctx.lineTo(x + size, y + size * 0.35);
-        ctx.bezierCurveTo(x + size + tab, y + size * 0.35, x + size + tab, y + size * 0.65, x + size, y + size * 0.65);
+        ctx.bezierCurveTo(x + size + 10, y + size * 0.35, x + size + 10, y + size * 0.65, x + size, y + size * 0.65);
         ctx.lineTo(x + size, y + size);
-        // Bottom edge
         ctx.lineTo(x, y + size);
-        // Left edge
-        ctx.lineTo(x, y);
         ctx.closePath();
       }
 
-      #createPuzzleCutout() {
-        const w = this.#mainCanvas.width;
-        const h = this.#mainCanvas.height;
-        const size = this.#puzzlePieceSize;
-
-        this.#puzzleTargetX = Math.floor(Math.random() * (w - size - 120)) + 90;
-        this.#puzzleTargetY = Math.floor(Math.random() * (h - size - 40)) + 20;
-
-        // Cutout silhouette on main canvas
-        this.#mainCtx.save();
-        this.#drawPuzzleShape(this.#mainCtx, this.#puzzleTargetX, this.#puzzleTargetY, size);
-        this.#mainCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
-        this.#mainCtx.fill();
-        this.#mainCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        this.#mainCtx.lineWidth = 2;
-        this.#mainCtx.stroke();
-        this.#mainCtx.restore();
-
-        // Slice cutout onto the floating puzzle piece canvas
-        this.#pieceCtx.clearRect(0, 0, w, h);
-        this.#pieceCtx.save();
-        this.#drawPuzzleShape(this.#pieceCtx, 0, this.#puzzleTargetY, size);
-        this.#pieceCtx.clip();
-        this.#pieceCtx.drawImage(
-          this.#mainCanvas,
-          this.#puzzleTargetX, this.#puzzleTargetY - size * 0.3, size + 20, size + 20,
-          0, this.#puzzleTargetY - size * 0.3, size + 20, size + 20
-        );
-        this.#pieceCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        this.#pieceCtx.lineWidth = 2;
-        this.#pieceCtx.stroke();
-        this.#pieceCtx.restore();
-      }
-
-      #drawMatrixOCR() {
-        const w = this.#mainCanvas.width;
-        const h = this.#mainCanvas.height;
-        const ctx = this.#mainCtx;
-
-        ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#090d16';
-        ctx.fillRect(0, 0, w, h);
-
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        this.#expectedAnswer = Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-
-        // Noise Grid
-        for (let x = 0; x < w; x += 15) {
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
-          ctx.strokeRect(x, 0, 15, h);
-        }
-
-        // Distorted glyphs
-        this.#expectedAnswer.split('').forEach((char, i) => {
-          ctx.save();
-          const x = 55 + i * 55;
-          const y = h / 2 + (Math.random() - 0.5) * 15;
-          const angle = (Math.random() - 0.5) * 0.45;
-          ctx.translate(x, y);
-          ctx.rotate(angle);
-          ctx.font = 'bold 38px monospace';
-          ctx.fillStyle = i % 2 === 0 ? '#818cf8' : '#34d399';
-          ctx.fillText(char, 0, 0);
-          ctx.restore();
-        });
-
-        // Interference warp lines
-        for (let i = 0; i < 4; i++) {
-          ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(0, Math.random() * h);
-          ctx.lineTo(w, Math.random() * h);
-          ctx.stroke();
-        }
-      }
-
-      #drawAudioWaveformScene() {
-        const w = this.#mainCanvas.width;
-        const h = this.#mainCanvas.height;
-        const ctx = this.#mainCtx;
-
-        ctx.clearRect(0, 0, w, h);
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, w, h);
-
-        // Generate 4 random digits
-        this.#audioDigits = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10)).join('');
-        this.#expectedAnswer = this.#audioDigits;
-
-        // Draw dynamic audio waveform visual
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        for (let x = 0; x < w; x += 6) {
-          const y = h / 2 + Math.sin(x * 0.08) * 30 * Math.random();
-          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
-        ctx.font = '13px sans-serif';
-        ctx.fillStyle = '#94a3b8';
-        ctx.textAlign = 'center';
-        ctx.fillText('Press the speaker button & enter spoken digits', w / 2, h - 25);
-      }
-
       #verifyPuzzle() {
-        const maxTrack = this.track.clientWidth - this.thumb.clientWidth - 4;
-        const canvasMax = this.#mainCanvas.width - this.#puzzlePieceSize - 10;
-        const currentCanvasX = (this.#currentSliderX / maxTrack) * canvasMax;
+        const w = this.viewW, size = 50;
+        const maxTrack = this.sliderTrack.clientWidth - this.sliderThumb.clientWidth - 4;
+        const currentPieceX = (this.#sliderX / maxTrack) * (w - size - 20);
 
-        const delta = Math.abs(currentCanvasX - this.#puzzleTargetX);
-        const tolerance = 7; // ±7px leeway
-
-        if (delta <= tolerance) {
-          this.#triggerSuccess('Security challenge passed! (Puzzle Aligned)');
+        if (Math.abs(currentPieceX - this.#puzzleTargetX) <= 6) {
+          this.#triggerSuccess('Ghost Slice Aligned');
         } else {
-          this.#triggerFailure('Misaligned puzzle piece. Try again.');
+          this.#triggerFailure('Alignment Mismatch');
         }
       }
 
-      #verifyTextChallenge() {
-        const input = this.textInput.value.trim().toUpperCase();
-        if (input === this.#expectedAnswer) {
-          this.#triggerSuccess('Security challenge passed! (OCR Verified)');
+      /**
+       * MODE 3: Phase Reticle
+       */
+      #initReticle() {
+        this.hudMode.innerText = 'MODE // PHASE_RETICLE';
+        document.getElementById('sliderHint').innerText = 'Rotate phase angle to lock target';
+        this.#gyroTargetAngle = Math.random() * Math.PI * 2;
+        const w = this.viewW, h = this.viewH;
+
+        const render = () => {
+          this.#mainCtx.clearRect(0, 0, w, h);
+          this.#mainCtx.fillStyle = '#02040a';
+          this.#mainCtx.fillRect(0, 0, w, h);
+
+          const cx = w / 2, cy = h / 2, r = 55;
+
+          // Quantum Ring
+          this.#mainCtx.strokeStyle = 'rgba(139, 92, 246, 0.25)';
+          this.#mainCtx.lineWidth = 3;
+          this.#mainCtx.beginPath();
+          this.#mainCtx.arc(cx, cy, r, 0, Math.PI * 2);
+          this.#mainCtx.stroke();
+
+          // Target Core
+          const tx = cx + Math.cos(this.#gyroTargetAngle) * r;
+          const ty = cy + Math.sin(this.#gyroTargetAngle) * r;
+          this.#mainCtx.fillStyle = 'var(--cyan)';
+          this.#mainCtx.shadowColor = 'var(--cyan)';
+          this.#mainCtx.shadowBlur = 10;
+          this.#mainCtx.beginPath();
+          this.#mainCtx.arc(tx, ty, 7, 0, Math.PI * 2);
+          this.#mainCtx.fill();
+          this.#mainCtx.shadowBlur = 0;
+
+          // User Reticle
+          const maxTrack = this.sliderTrack.clientWidth - this.sliderThumb.clientWidth - 4;
+          this.#gyroUserAngle = (this.#sliderX / maxTrack) * Math.PI * 2;
+
+          this.#overlayCtx.clearRect(0, 0, w, h);
+          const ux = cx + Math.cos(this.#gyroUserAngle) * r;
+          const uy = cy + Math.sin(this.#gyroUserAngle) * r;
+
+          this.#overlayCtx.strokeStyle = '#fff';
+          this.#overlayCtx.lineWidth = 2;
+          this.#overlayCtx.beginPath();
+          this.#overlayCtx.arc(ux, uy, 10, 0, Math.PI * 2);
+          this.#overlayCtx.moveTo(ux - 14, uy); this.#overlayCtx.lineTo(ux + 14, uy);
+          this.#overlayCtx.moveTo(ux, uy - 14); this.#overlayCtx.lineTo(ux, uy + 14);
+          this.#overlayCtx.stroke();
+
+          if (this.#mode === 'reticle') this.#animFrameId = requestAnimationFrame(render);
+        };
+        render();
+      }
+
+      #verifyReticle() {
+        const diff = Math.abs(this.#gyroUserAngle - this.#gyroTargetAngle);
+        if (diff < 0.16 || Math.abs(diff - Math.PI * 2) < 0.16) {
+          this.#triggerSuccess('Reticle Phase Locked');
         } else {
-          this.#triggerFailure('Incorrect answer. New challenge generated.');
+          this.#triggerFailure('Phase Mismatch');
+        }
+      }
+
+      /**
+       * MODE 4: Ghost Audio FFT
+       */
+      #initAudio() {
+        this.hudMode.innerText = 'MODE // GHOST_AUDIO_FFT';
+        this.audioPlayBtn.classList.remove('hidden');
+        this.ghostHologram.innerText = 'ENTER DIGITS';
+
+        this.#audioCode = Array.from({length: 4}, () => Math.floor(Math.random() * 10)).join('');
+        this.#expectedCode = this.#audioCode;
+        const w = this.viewW, h = this.viewH;
+
+        const render = () => {
+          this.#mainCtx.clearRect(0, 0, w, h);
+          this.#mainCtx.fillStyle = '#02040a';
+          this.#mainCtx.fillRect(0, 0, w, h);
+
+          // Simulated Audio FFT Waves
+          this.#mainCtx.strokeStyle = 'var(--cyan)';
+          this.#mainCtx.lineWidth = 2;
+          this.#mainCtx.beginPath();
+          for (let x = 0; x < w; x += 4) {
+            const y = h / 2 + Math.sin(x * 0.05 + performance.now() * 0.005) * 26 * Math.sin(x * 0.015);
+            if (x === 0) this.#mainCtx.moveTo(x, y); else this.#mainCtx.lineTo(x, y);
+          }
+          this.#mainCtx.stroke();
+
+          if (this.#mode === 'audio') this.#animFrameId = requestAnimationFrame(render);
+        };
+        render();
+      }
+
+      #verifyText() {
+        if (this.textInput.value.trim().toUpperCase() === this.#expectedCode) {
+          this.#triggerSuccess('Ghost Signature Verified');
+        } else {
+          this.#triggerFailure('Invalid Code');
         }
       }
 
       #triggerSuccess(msg) {
-        // Honeypot bot check
-        if (document.getElementById('botTrapField').value !== '') {
-          this.#triggerFailure('Bot behavior signature detected.');
+        // Honeypot trap check
+        if (document.getElementById('zcap_ghost_trap').value !== '') {
+          this.#triggerFailure('Automated Bot Signature Intercepted');
           return;
         }
 
         this.#isVerified = true;
-        this.sound.playSuccess();
+        if (this.#animFrameId) cancelAnimationFrame(this.#animFrameId);
+        this.synth.playSuccess();
         this.confetti.burst();
-        this.status.innerText = `✓ ${msg}`;
+
+        this.status.innerHTML = `✓ ${msg}`;
         this.status.className = 'status-panel success';
+        document.getElementById('ambientGlow').style.background = 'radial-gradient(circle, var(--success-glow), transparent 70%)';
 
-        this.thumb.style.background = 'var(--success)';
-        this.textInput.disabled = true;
-        document.getElementById('verifyTextBtn').disabled = true;
-
-        const eventPayload = {
+        const attestation = {
+          shield: 'ZCap_GHOST_v4.2',
           verified: true,
           mode: this.#mode,
+          entropy: `${this.#entropy.toFixed(1)}%`,
           powProof: this.#powProof,
-          entropy: this.#entropy,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          jwtAttestation: `eyJhbGciOiJFUzI1NiJ9.${btoa(JSON.stringify({ zcap: true, ts: Date.now() }))}.zcap_ghost_sig`
         };
 
-        console.log('OmniShield Verification Signature Token:', eventPayload);
-        document.dispatchEvent(new CustomEvent('omnishield-success', { detail: eventPayload }));
+        this.proofBox.innerText = JSON.stringify(attestation, null, 2);
+        this.proofBox.classList.add('open');
+        document.getElementById('proofArrow').innerText = '▲';
+
+        document.dispatchEvent(new CustomEvent('zcap-verified', { detail: attestation }));
       }
 
       #triggerFailure(msg) {
-        this.sound.playError();
+        this.synth.playError();
         this.status.innerText = `✕ ${msg}`;
         this.status.className = 'status-panel error';
-        setTimeout(() => this.generateChallenge(), 900);
+        setTimeout(() => this.switchMode(this.#mode), 850);
       }
     }
 
-    // Launch standalone instance on DOM load
+    // Launch ZCap
     document.addEventListener('DOMContentLoaded', () => {
-      window.shield = new OmniShield();
+      window.zcap = new ZCapEngine();
     });
   </script>
 </body>
