@@ -3,562 +3,974 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Production CAPTCHA Widget</title>
+  <title>OmniShield Enterprise Autonomous CAPTCHA</title>
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --success: #16a34a;
-      --error: #dc2626;
-      --bg: #f8fafc;
-      --card-bg: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #cbd5e1;
-      --ring: rgba(37, 99, 235, 0.35);
-      --radius: 12px;
-      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-glow: rgba(79, 70, 229, 0.35);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.3);
+      --error: #f43f5e;
+      --bg: #090d16;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --surface: rgba(255, 255, 255, 0.03);
+      --surface-border: rgba(255, 255, 255, 0.07);
+      --radius: 16px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-color-scheme: light) {
       :root {
-        --bg: #0f172a;
-        --card-bg: #1e293b;
-        --text: #f8fafc;
-        --text-muted: #94a3b8;
-        --border: #334155;
-        --ring: rgba(96, 165, 250, 0.4);
+        --bg: #f1f5f9;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --card-border: rgba(0, 0, 0, 0.08);
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --surface: rgba(0, 0, 0, 0.02);
+        --surface-border: rgba(0, 0, 0, 0.06);
       }
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font);
       background-color: var(--bg);
       color: var(--text);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 1.25rem;
+      padding: 1rem;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
     }
 
-    .captcha-card {
+    .shield-card {
       background: var(--card-bg);
-      border: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
       border-radius: var(--radius);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.025);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px var(--card-border);
       padding: 1.5rem;
       width: 100%;
-      max-width: 380px;
+      max-width: 420px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .captcha-header {
+    .header {
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--primary), #ec4899);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .brand-text h1 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .mode-nav {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 3px;
+      margin-bottom: 1rem;
+      gap: 2px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      border-radius: 7px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+
+    .nav-tab.active {
+      background: var(--card-bg);
+      color: var(--text);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .viewport {
+      position: relative;
+      border-radius: 12px;
+      background: #000;
+      overflow: hidden;
+      border: 1px solid var(--surface-border);
+      height: 180px;
+      display: flex;
+      justify-content: center;
       align-items: center;
       margin-bottom: 1rem;
     }
 
-    .captcha-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
+    #mainCanvas, #puzzlePieceCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      touch-action: none;
     }
 
-    .timer-badge {
-      font-size: 0.8rem;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      color: var(--text-muted);
-      background: var(--bg);
-      padding: 0.25rem 0.6rem;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      transition: color var(--transition), border-color var(--transition);
+    #puzzlePieceCanvas {
+      filter: drop-shadow(0px 0px 8px rgba(0, 0, 0, 0.8));
+      z-index: 2;
     }
 
-    .timer-badge.warning {
-      color: var(--error);
-      border-color: var(--error);
-    }
-
-    .canvas-container {
+    .slider-track {
       position: relative;
+      height: 48px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 24px;
+      overflow: hidden;
       display: flex;
-      justify-content: center;
       align-items: center;
-      background: var(--bg);
-      border: 1px dashed var(--border);
-      border-radius: calc(var(--radius) - 4px);
-      overflow: hidden;
-      margin-bottom: 0.75rem;
-    }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: 75px;
       user-select: none;
-      -webkit-user-select: none;
+      touch-action: none;
+      margin-bottom: 1rem;
     }
 
-    .progress-bar-container {
+    .slider-guide {
+      position: absolute;
       width: 100%;
-      height: 4px;
-      background-color: var(--border);
-      border-radius: 2px;
-      overflow: hidden;
-      margin-bottom: 1.25rem;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      pointer-events: none;
     }
 
-    .progress-bar {
+    .slider-progress {
+      position: absolute;
+      left: 0;
+      top: 0;
       height: 100%;
-      width: 100%;
-      background-color: var(--primary);
-      transition: width 1s linear, background-color var(--transition);
+      background: linear-gradient(90deg, var(--primary-glow), var(--primary));
+      opacity: 0.25;
+      width: 0%;
     }
 
-    .form-group {
+    .slider-thumb {
+      position: absolute;
+      left: 2px;
+      width: 44px;
+      height: 44px;
+      background: #fff;
+      color: #0f172a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: transform 0.08s ease-out;
+      z-index: 3;
+    }
+
+    .slider-thumb:active { cursor: grabbing; transform: scale(0.96); }
+
+    .input-row {
       display: flex;
       gap: 0.5rem;
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
     }
 
-    .input-wrapper {
+    input[type="text"] {
       flex: 1;
-      position: relative;
-    }
-
-    label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
-    }
-
-    input[type="number"] {
-      width: 100%;
       height: 44px;
-      padding: 0 0.85rem;
-      border: 1.5px solid var(--border);
-      border-radius: calc(var(--radius) - 4px);
-      background-color: var(--card-bg);
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
-      transition: border-color var(--transition), box-shadow var(--transition);
-      -moz-appearance: textfield;
-    }
-
-    input[type="number"]::-webkit-outer-spin-button,
-    input[type="number"]::-webkit-inner-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-
-    input[type="number"]:focus-visible {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px var(--ring);
-    }
-
-    button {
-      height: 44px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
       padding: 0 1rem;
+      font-size: 1rem;
+      color: var(--text);
+      outline: none;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 700;
+      text-align: center;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    button.btn-primary {
+      height: 44px;
+      padding: 0 1.25rem;
+      background: var(--primary);
+      color: #fff;
       border: none;
-      border-radius: calc(var(--radius) - 4px);
-      font-size: 0.95rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      transition: background-color var(--transition), transform 0.05s ease, opacity var(--transition);
+      gap: 6px;
+      transition: all 0.2s;
     }
 
-    button:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
+    button.btn-primary:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
+    button.btn-primary:active:not(:disabled) { transform: translateY(0); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .btn-icon {
-      background-color: transparent;
-      border: 1.5px solid var(--border);
-      color: var(--text);
       width: 44px;
-      padding: 0;
+      height: 44px;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
     }
 
-    .btn-icon:hover:not(:disabled) {
-      background-color: var(--bg);
+    .btn-icon:hover { background: rgba(255, 255, 255, 0.08); }
+
+    .telemetry-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface);
+      border-radius: 8px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
     }
 
-    .btn-submit {
-      width: 100%;
-      background-color: var(--primary);
-      color: #ffffff;
+    .telemetry-pill {
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .btn-submit:hover:not(:disabled) {
-      background-color: var(--primary-hover);
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
     }
 
-    .status-area {
-      min-height: 24px;
-      margin-top: 0.85rem;
-      font-size: 0.875rem;
-      font-weight: 500;
+    .status-panel {
+      font-size: 0.82rem;
+      font-weight: 600;
       text-align: center;
-      transition: color var(--transition);
+      min-height: 20px;
+      margin-top: 0.25rem;
+      transition: color 0.2s;
     }
 
-    .status-area.success { color: var(--success); }
-    .status-area.error { color: var(--error); }
-    .status-area.info { color: var(--text-muted); }
+    .status-panel.success { color: var(--success); }
+    .status-panel.error { color: var(--error); }
+
+    .honeypot {
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 0;
+      width: 0;
+      z-index: -1;
+    }
+
+    .hidden { display: none !important; }
+
+    .confetti-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
 
-  <main class="captcha-card" aria-label="Human Verification Card">
-    <div class="captcha-header">
-      <h2 class="captcha-title">Security Check</h2>
-      <div id="timer" class="timer-badge" aria-label="Time remaining">30s</div>
-    </div>
+  <main class="shield-card" id="captchaWidget">
+    <canvas id="confetti" class="confetti-canvas"></canvas>
 
-    <!-- Anti-bot visual canvas -->
-    <div class="canvas-container">
-      <canvas id="captchaCanvas" width="320" height="75" aria-hidden="true"></canvas>
-    </div>
+    <!-- Invisible Bot Honeypot -->
+    <input type="text" id="botTrapField" class="honeypot" tabindex="-1" autocomplete="off" />
 
-    <!-- Expiration countdown bar -->
-    <div class="progress-bar-container">
-      <div id="progressBar" class="progress-bar"></div>
-    </div>
-
-    <form id="captchaForm" novalidate>
-      <div class="form-group">
-        <div class="input-wrapper">
-          <label for="captchaInput">Enter the solution</label>
-          <input 
-            type="number" 
-            id="captchaInput" 
-            placeholder="Enter answer" 
-            inputmode="numeric" 
-            autocomplete="off" 
-            required 
-            aria-describedby="status"
-          />
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
         </div>
-        <button 
-          type="button" 
-          id="refreshBtn" 
-          class="btn-icon" 
-          title="Refresh Challenge" 
-          aria-label="Get a new math challenge"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <polyline points="1 20 1 14 7 14"></polyline>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        <div class="brand-text">
+          <h1>OmniShield AI</h1>
+          <p>Autonomous Zero-Trust Shield</p>
+        </div>
+      </div>
+      <button id="refreshBtn" class="btn-icon" title="Regenerate challenge" aria-label="Refresh">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+      </button>
+    </header>
+
+    <nav class="mode-nav" role="tablist">
+      <button class="nav-tab active" data-mode="puzzle" role="tab">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        Slide Puzzle
+      </button>
+      <button class="nav-tab" data-mode="matrix" role="tab">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
+        Matrix OCR
+      </button>
+      <button class="nav-tab" data-mode="audio" role="tab">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        Voice Synthesizer
+      </button>
+    </nav>
+
+    <div class="viewport">
+      <canvas id="mainCanvas" width="370" height="180"></canvas>
+      <canvas id="puzzlePieceCanvas" width="370" height="180"></canvas>
+    </div>
+
+    <!-- Mode 1: Slide to Fit Controls -->
+    <div id="puzzleControls">
+      <div class="slider-track" id="sliderTrack">
+        <div class="slider-progress" id="sliderProgress"></div>
+        <div class="slider-guide">Slide puzzle piece to target</div>
+        <div class="slider-thumb" id="sliderThumb" role="slider" aria-label="Puzzle Slider">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode 2 & 3: Input & Audio Submit Controls -->
+    <div id="textControls" class="hidden">
+      <form id="textForm" class="input-row" novalidate>
+        <input type="text" id="textInput" placeholder="Enter solution" maxlength="8" autocomplete="off" />
+        <button type="button" id="playAudioBtn" class="btn-icon hidden" title="Speak digits">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
           </svg>
         </button>
+        <button type="submit" class="btn-primary" id="verifyTextBtn">Verify</button>
+      </form>
+    </div>
+
+    <!-- Real-time Autonomous Heuristics & PoW Proof Telemetry -->
+    <div class="telemetry-bar">
+      <div class="telemetry-pill">
+        <span class="dot" id="powDot"></span>
+        <span id="powStatus">PoW: Mining SHA-256...</span>
       </div>
+      <div class="telemetry-pill">
+        <span>Entropy: </span>
+        <strong id="entropyScore" style="color: var(--text);">0.00</strong>
+      </div>
+    </div>
 
-      <button type="submit" id="verifyBtn" class="btn-submit">Verify</button>
-    </form>
-
-    <!-- Accessible status live-region for screen readers -->
-    <div id="status" class="status-area info" role="status" aria-live="polite"></div>
+    <div id="statusPanel" class="status-panel" role="status" aria-live="polite"></div>
   </main>
 
   <script>
     /**
-     * Enterprise Production CAPTCHA Controller
-     * Zero eval(), obfuscated canvas rendering, salted SHA-256 validation,
-     * rate-limit lockouts, and accessible ARIA updates.
+     * Web Audio Sound FX & Speech Synthesizer Engine
      */
-    class SecureCaptcha {
-      #canvas;
-      #ctx;
-      #timerId = null;
-      #duration = 30;
-      #remaining = 30;
-      #expectedHash = null;
-      #salt = null;
-      #challengeTimestamp = 0;
-      #failedAttempts = 0;
-      #maxAttempts = 3;
-      #isLocked = false;
-
-      // Safe deterministic operator registry
-      #operators = [
-        { symbol: '+', fn: (a, b) => a + b },
-        { symbol: '-', fn: (a, b) => a - b },
-        { symbol: '×', fn: (a, b) => a * b }
-      ];
-
-      constructor(canvasId) {
-        this.#canvas = document.getElementById(canvasId);
-        this.#ctx = this.#canvas.getContext('2d');
-        this.#initElements();
-        this.#bindEvents();
-        this.generateChallenge();
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
       }
-
-      #initElements() {
-        this.form = document.getElementById('captchaForm');
-        this.input = document.getElementById('captchaInput');
-        this.timer = document.getElementById('timer');
-        this.progressBar = document.getElementById('progressBar');
-        this.status = document.getElementById('status');
-        this.verifyBtn = document.getElementById('verifyBtn');
-        this.refreshBtn = document.getElementById('refreshBtn');
+      #init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       }
-
-      #bindEvents() {
-        this.form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          this.verify();
-        });
-
-        this.refreshBtn.addEventListener('click', () => {
-          if (!this.#isLocked) this.generateChallenge();
-        });
+      playTick() {
+        try {
+          this.#init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.03);
+          gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+          gain.gain.linearRampToValueAtTime(0.001, this.ctx.currentTime + 0.03);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(); osc.stop(this.ctx.currentTime + 0.03);
+        } catch (e) {}
       }
-
-      /**
-       * Cryptographically salted SHA-256 calculation via Web Crypto API
-       */
-      async #hashSolution(val, salt) {
-        const buffer = new TextEncoder().encode(String(val) + salt);
-        const digest = await window.crypto.subtle.digest('SHA-256', buffer);
-        return Array.from(new Uint8Array(digest))
-          .map(b => b.toString(16).padStart(2, '0'))
-          .join('');
+      playSuccess() {
+        try {
+          this.#init();
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.08);
+            gain.gain.setValueAtTime(0.08, this.ctx.currentTime + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + i * 0.08 + 0.35);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + i * 0.08);
+            osc.stop(this.ctx.currentTime + i * 0.08 + 0.35);
+          });
+        } catch (e) {}
       }
-
-      #getRandomInt(min, max) {
-        const array = new Uint32Array(1);
-        window.crypto.getRandomValues(array);
-        return min + (array[0] % (max - min + 1));
+      playError() {
+        try {
+          this.#init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+          osc.frequency.linearRampToValueAtTime(90, this.ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.09, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+        } catch (e) {}
       }
-
-      async generateChallenge() {
-        if (this.#isLocked) return;
-
-        clearInterval(this.#timerId);
-        this.input.value = '';
-        this.input.focus();
-        this.#setStatus('', 'info');
-
-        const op = this.#operators[this.#getRandomInt(0, this.#operators.length - 1)];
-        let num1 = this.#getRandomInt(10, 40);
-        let num2 = this.#getRandomInt(2, 10);
-
-        // Keep subtractions positive
-        if (op.symbol === '-' && num2 > num1) {
-          [num1, num2] = [num2, num1];
+      speakDigits(digits) {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const text = digits.split('').join(' . ');
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.8;
+          utterance.pitch = 0.9;
+          window.speechSynthesis.speak(utterance);
         }
-
-        const answer = op.fn(num1, num2);
-        
-        // Dynamic salt prevents client-side precomputed rainbow tables
-        this.#salt = window.crypto.randomUUID();
-        this.#expectedHash = await this.#hashSolution(answer, this.#salt);
-        this.#challengeTimestamp = Date.now();
-
-        this.#drawCanvas(`${num1} ${op.symbol} ${num2} = ?`);
-        this.#startTimer();
-      }
-
-      #drawCanvas(text) {
-        const { width, height } = this.#canvas;
-        const ctx = this.#ctx;
-
-        ctx.clearRect(0, 0, width, height);
-
-        // Responsive background based on system theme
-        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const grad = ctx.createLinearGradient(0, 0, width, height);
-        grad.addColorStop(0, isDark ? '#1e293b' : '#f1f5f9');
-        grad.addColorStop(1, isDark ? '#0f172a' : '#e2e8f0');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-
-        // Noise dots
-        for (let i = 0; i < 50; i++) {
-          ctx.beginPath();
-          ctx.arc(
-            this.#getRandomInt(0, width),
-            this.#getRandomInt(0, height),
-            this.#getRandomInt(1, 2),
-            0,
-            2 * Math.PI
-          );
-          ctx.fillStyle = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
-          ctx.fill();
-        }
-
-        // Interference curves
-        for (let i = 0; i < 3; i++) {
-          ctx.beginPath();
-          ctx.moveTo(this.#getRandomInt(0, width), this.#getRandomInt(0, height));
-          ctx.bezierCurveTo(
-            this.#getRandomInt(0, width), this.#getRandomInt(0, height),
-            this.#getRandomInt(0, width), this.#getRandomInt(0, height),
-            this.#getRandomInt(0, width), this.#getRandomInt(0, height)
-          );
-          ctx.strokeStyle = isDark ? 'rgba(148, 163, 184, 0.35)' : 'rgba(100, 116, 139, 0.35)';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
-
-        // Obfuscated Glyph Rendering
-        ctx.font = 'bold 26px -apple-system, sans-serif';
-        ctx.textBaseline = 'middle';
-        
-        const chars = text.split('');
-        const startX = 35;
-        const spacing = (width - 70) / chars.length;
-
-        chars.forEach((char, i) => {
-          ctx.save();
-          const charX = startX + i * spacing;
-          const charY = height / 2 + this.#getRandomInt(-4, 4);
-          const angle = (this.#getRandomInt(-12, 12) * Math.PI) / 180;
-
-          ctx.translate(charX, charY);
-          ctx.rotate(angle);
-          ctx.fillStyle = isDark ? '#f8fafc' : '#0f172a';
-          ctx.fillText(char, 0, 0);
-          ctx.restore();
-        });
-      }
-
-      #startTimer() {
-        this.#remaining = this.#duration;
-        this.#updateTimerUI();
-
-        this.#timerId = setInterval(() => {
-          this.#remaining--;
-          this.#updateTimerUI();
-
-          if (this.#remaining <= 0) {
-            clearInterval(this.#timerId);
-            this.#setStatus('Session expired. Generating new challenge...', 'error');
-            setTimeout(() => this.generateChallenge(), 1000);
-          }
-        }, 1000);
-      }
-
-      #updateTimerUI() {
-        this.timer.innerText = `${this.#remaining}s`;
-        const percent = (this.#remaining / this.#duration) * 100;
-        this.progressBar.style.width = `${percent}%`;
-
-        if (this.#remaining <= 5) {
-          this.timer.classList.add('warning');
-          this.progressBar.style.backgroundColor = 'var(--error)';
-        } else {
-          this.timer.classList.remove('warning');
-          this.progressBar.style.backgroundColor = 'var(--primary)';
-        }
-      }
-
-      #setStatus(text, type = 'info') {
-        this.status.innerText = text;
-        this.status.className = `status-area ${type}`;
-      }
-
-      async verify() {
-        if (this.#isLocked) return;
-
-        const rawValue = this.input.value.trim();
-        if (!rawValue) {
-          this.#setStatus('Please enter an answer.', 'error');
-          return;
-        }
-
-        // Time check
-        const elapsed = (Date.now() - this.#challengeTimestamp) / 1000;
-        if (elapsed > this.#duration) {
-          this.#setStatus('Challenge timed out. Refreshing...', 'error');
-          this.generateChallenge();
-          return;
-        }
-
-        const computedHash = await this.#hashSolution(rawValue, this.#salt);
-
-        if (computedHash === this.#expectedHash) {
-          clearInterval(this.#timerId);
-          this.#setStatus('✓ Verification successful!', 'success');
-          this.input.disabled = true;
-          this.verifyBtn.disabled = true;
-          this.refreshBtn.disabled = true;
-          this.#failedAttempts = 0;
-
-          // Dispatch custom event containing token payload
-          document.dispatchEvent(new CustomEvent('captcha-verified', {
-            detail: {
-              salt: this.#salt,
-              hash: computedHash,
-              verifiedAt: Date.now()
-            }
-          }));
-        } else {
-          this.#failedAttempts++;
-          if (this.#failedAttempts >= this.#maxAttempts) {
-            this.#triggerLockout(10);
-          } else {
-            this.#setStatus(`Incorrect answer. ${this.#maxAttempts - this.#failedAttempts} attempt(s) left.`, 'error');
-            this.generateChallenge();
-          }
-        }
-      }
-
-      #triggerLockout(seconds) {
-        this.#isLocked = true;
-        clearInterval(this.#timerId);
-        this.input.disabled = true;
-        this.verifyBtn.disabled = true;
-        this.refreshBtn.disabled = true;
-
-        let lockoutTimer = seconds;
-        this.#setStatus(`Too many failed attempts. Locked for ${lockoutTimer}s.`, 'error');
-
-        const interval = setInterval(() => {
-          lockoutTimer--;
-          this.#setStatus(`Too many failed attempts. Locked for ${lockoutTimer}s.`, 'error');
-          if (lockoutTimer <= 0) {
-            clearInterval(interval);
-            this.#isLocked = false;
-            this.#failedAttempts = 0;
-            this.input.disabled = false;
-            this.verifyBtn.disabled = false;
-            this.refreshBtn.disabled = false;
-            this.generateChallenge();
-          }
-        }, 1000);
       }
     }
 
-    // Initialize CAPTCHA once the DOM is ready
+    /**
+     * Confetti Particle Engine
+     */
+    class Confetti {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.particles = [];
+      }
+      burst() {
+        this.canvas.width = this.canvas.parentElement.clientWidth;
+        this.canvas.height = this.canvas.parentElement.clientHeight;
+        const colors = ['#4f46e5', '#10b981', '#ec4899', '#f59e0b', '#3b82f6'];
+        for (let i = 0; i < 45; i++) {
+          this.particles.push({
+            x: this.canvas.width / 2,
+            y: this.canvas.height / 2,
+            vx: (Math.random() - 0.5) * 12,
+            vy: (Math.random() - 0.7) * 12,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() * 5 + 3,
+            alpha: 1
+          });
+        }
+        this.#animate();
+      }
+      #animate() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.35;
+          p.alpha -= 0.02;
+          this.ctx.fillStyle = p.color;
+          this.ctx.globalAlpha = Math.max(0, p.alpha);
+          this.ctx.fillRect(p.x, p.y, p.size, p.size);
+          if (p.alpha <= 0) this.particles.splice(i, 1);
+        });
+        if (this.particles.length > 0) requestAnimationFrame(() => this.#animate());
+        else this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+    }
+
+    /**
+     * Core OmniShield Controller
+     */
+    class OmniShield {
+      #mainCanvas; #mainCtx;
+      #pieceCanvas; #pieceCtx;
+      #mode = 'puzzle';
+      #puzzleTargetX = 0;
+      #puzzleTargetY = 0;
+      #puzzlePieceSize = 46;
+      #currentSliderX = 0;
+      #expectedAnswer = '';
+      #powProof = null;
+      #mouseTrajectory = [];
+      #entropy = 0;
+      #isVerified = false;
+      #audioDigits = '';
+
+      constructor() {
+        this.#mainCanvas = document.getElementById('mainCanvas');
+        this.#mainCtx = this.#mainCanvas.getContext('2d');
+        this.#pieceCanvas = document.getElementById('puzzlePieceCanvas');
+        this.#pieceCtx = this.#pieceCanvas.getContext('2d');
+        this.sound = new SoundFX();
+        this.confetti = new Confetti('confetti');
+
+        this.#initDOM();
+        this.#bindEvents();
+        this.#runProofOfWork();
+        this.generateChallenge();
+      }
+
+      #initDOM() {
+        this.track = document.getElementById('sliderTrack');
+        this.thumb = document.getElementById('sliderThumb');
+        this.progress = document.getElementById('sliderProgress');
+        this.status = document.getElementById('statusPanel');
+        this.textInput = document.getElementById('textInput');
+        this.textForm = document.getElementById('textForm');
+        this.playAudioBtn = document.getElementById('playAudioBtn');
+        this.puzzleControls = document.getElementById('puzzleControls');
+        this.textControls = document.getElementById('textControls');
+        this.entropyDisplay = document.getElementById('entropyScore');
+        this.powStatus = document.getElementById('powStatus');
+        this.powDot = document.getElementById('powDot');
+      }
+
+      #bindEvents() {
+        // Mode Tabs
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+          tab.addEventListener('click', (e) => {
+            if (this.#isVerified) return;
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            this.#mode = tab.dataset.mode;
+            this.generateChallenge();
+          });
+        });
+
+        // Refresh Button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+          if (!this.#isVerified) this.generateChallenge();
+        });
+
+        // Mouse Trajectory Tracking for Entropy calculation
+        window.addEventListener('pointermove', (e) => {
+          if (this.#isVerified) return;
+          this.#mouseTrajectory.push({ x: e.clientX, y: e.clientY, t: performance.now() });
+          if (this.#mouseTrajectory.length > 35) this.#mouseTrajectory.shift();
+          this.#calculateEntropy();
+        });
+
+        // Audio Challenge Play Button
+        this.playAudioBtn.addEventListener('click', () => {
+          this.sound.speakDigits(this.#audioDigits);
+        });
+
+        // Form Submit for OCR / Audio
+        this.textForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.#verifyTextChallenge();
+        });
+
+        // Dragging physics for the Puzzle Slider
+        let isDragging = false;
+        let startX = 0;
+
+        const onDragStart = (e) => {
+          if (this.#isVerified || this.#mode !== 'puzzle') return;
+          isDragging = true;
+          startX = (e.touches ? e.touches[0].clientX : e.clientX) - this.#currentSliderX;
+          this.thumb.style.transition = 'none';
+        };
+
+        const onDragMove = (e) => {
+          if (!isDragging) return;
+          const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+          const maxTrack = this.track.clientWidth - this.thumb.clientWidth - 4;
+          let newX = clientX - startX;
+          newX = Math.max(0, Math.min(newX, maxTrack));
+
+          this.#currentSliderX = newX;
+          this.thumb.style.transform = `translateX(${newX}px)`;
+          this.progress.style.width = `${(newX / maxTrack) * 100}%`;
+
+          // Synchronize Puzzle Piece on Canvas
+          const canvasMax = this.#mainCanvas.width - this.#puzzlePieceSize - 10;
+          const pieceX = (newX / maxTrack) * canvasMax;
+          this.#pieceCanvas.style.transform = `translateX(${pieceX}px)`;
+
+          if (Math.random() < 0.15) this.sound.playTick();
+        };
+
+        const onDragEnd = () => {
+          if (!isDragging) return;
+          isDragging = false;
+          this.thumb.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+          this.#pieceCanvas.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
+          this.#verifyPuzzle();
+        };
+
+        this.thumb.addEventListener('mousedown', onDragStart);
+        window.addEventListener('mousemove', onDragMove);
+        window.addEventListener('mouseup', onDragEnd);
+
+        this.thumb.addEventListener('touchstart', onDragStart, { passive: true });
+        window.addEventListener('touchmove', onDragMove, { passive: true });
+        window.addEventListener('touchend', onDragEnd);
+      }
+
+      /**
+       * Background Proof of Work (PoW) SHA-256 Mining Simulation
+       */
+      async #runProofOfWork() {
+        const seed = window.crypto.randomUUID();
+        let nonce = 0;
+        const targetPrefix = '000'; // Moderate PoW difficulty
+
+        const start = performance.now();
+        while (true) {
+          const buffer = new TextEncoder().encode(seed + nonce);
+          const hashBuf = await window.crypto.subtle.digest('SHA-256', buffer);
+          const hashArr = Array.from(new Uint8Array(hashBuf));
+          const hex = hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
+
+          if (hex.startsWith(targetPrefix)) {
+            this.#powProof = { seed, nonce, hash: hex, time: (performance.now() - start).toFixed(1) };
+            this.powStatus.innerText = `PoW Verified (${this.#powProof.time}ms)`;
+            this.powDot.style.background = 'var(--success)';
+            break;
+          }
+          nonce++;
+          if (nonce % 500 === 0) await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      #calculateEntropy() {
+        if (this.#mouseTrajectory.length < 5) return;
+        let distance = 0;
+        let angleChanges = 0;
+
+        for (let i = 2; i < this.#mouseTrajectory.length; i++) {
+          const p1 = this.#mouseTrajectory[i - 2];
+          const p2 = this.#mouseTrajectory[i - 1];
+          const p3 = this.#mouseTrajectory[i];
+
+          const d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+          distance += d;
+
+          const a1 = Math.atan2(p2.y - p1.y, p2.x - p1.x);
+          const a2 = Math.atan2(p3.y - p2.y, p3.x - p2.x);
+          angleChanges += Math.abs(a2 - a1);
+        }
+
+        this.#entropy = Math.min(1.0, (angleChanges / 15) * (distance > 80 ? 1 : 0.5));
+        this.entropyDisplay.innerText = this.#entropy.toFixed(2);
+      }
+
+      /**
+       * Master Challenge Generator
+       */
+      generateChallenge() {
+        if (this.#isVerified) return;
+        this.#resetUI();
+
+        if (this.#mode === 'puzzle') {
+          this.puzzleControls.classList.remove('hidden');
+          this.textControls.classList.add('hidden');
+          this.#drawGenerativeArtScene();
+          this.#createPuzzleCutout();
+        } else if (this.#mode === 'matrix') {
+          this.puzzleControls.classList.add('hidden');
+          this.textControls.classList.remove('hidden');
+          this.playAudioBtn.classList.add('hidden');
+          this.#drawMatrixOCR();
+        } else if (this.#mode === 'audio') {
+          this.puzzleControls.classList.add('hidden');
+          this.textControls.classList.remove('hidden');
+          this.playAudioBtn.classList.remove('hidden');
+          this.#drawAudioWaveformScene();
+        }
+      }
+
+      #resetUI() {
+        this.#currentSliderX = 0;
+        this.thumb.style.transform = 'translateX(0px)';
+        this.progress.style.width = '0%';
+        this.#pieceCanvas.style.transform = 'translateX(0px)';
+        this.#pieceCanvas.style.display = this.#mode === 'puzzle' ? 'block' : 'none';
+        this.textInput.value = '';
+        this.status.innerText = '';
+        this.status.className = 'status-panel';
+      }
+
+      #drawGenerativeArtScene() {
+        const w = this.#mainCanvas.width;
+        const h = this.#mainCanvas.height;
+        const ctx = this.#mainCtx;
+
+        ctx.clearRect(0, 0, w, h);
+
+        // Cyberpunk Synthwave Mesh
+        const grad = ctx.createLinearGradient(0, 0, w, h);
+        grad.addColorStop(0, '#0f172a');
+        grad.addColorStop(0.5, '#31104b');
+        grad.addColorStop(1, '#022c22');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Generative Starfield / Geometric Grid
+        for (let i = 0; i < 40; i++) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.7})`;
+          ctx.beginPath();
+          ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Geometric Nebula Beams
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = i % 2 === 0 ? 'rgba(99, 102, 241, 0.4)' : 'rgba(236, 72, 153, 0.35)';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, Math.random() * h);
+          ctx.bezierCurveTo(w * 0.3, Math.random() * h, w * 0.7, Math.random() * h, w, Math.random() * h);
+          ctx.stroke();
+        }
+      }
+
+      #drawPuzzleShape(ctx, x, y, size) {
+        const tab = size * 0.28;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        // Top edge
+        ctx.lineTo(x + size * 0.35, y);
+        ctx.bezierCurveTo(x + size * 0.35, y - tab, x + size * 0.65, y - tab, x + size * 0.65, y);
+        ctx.lineTo(x + size, y);
+        // Right edge
+        ctx.lineTo(x + size, y + size * 0.35);
+        ctx.bezierCurveTo(x + size + tab, y + size * 0.35, x + size + tab, y + size * 0.65, x + size, y + size * 0.65);
+        ctx.lineTo(x + size, y + size);
+        // Bottom edge
+        ctx.lineTo(x, y + size);
+        // Left edge
+        ctx.lineTo(x, y);
+        ctx.closePath();
+      }
+
+      #createPuzzleCutout() {
+        const w = this.#mainCanvas.width;
+        const h = this.#mainCanvas.height;
+        const size = this.#puzzlePieceSize;
+
+        this.#puzzleTargetX = Math.floor(Math.random() * (w - size - 120)) + 90;
+        this.#puzzleTargetY = Math.floor(Math.random() * (h - size - 40)) + 20;
+
+        // Cutout silhouette on main canvas
+        this.#mainCtx.save();
+        this.#drawPuzzleShape(this.#mainCtx, this.#puzzleTargetX, this.#puzzleTargetY, size);
+        this.#mainCtx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+        this.#mainCtx.fill();
+        this.#mainCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        this.#mainCtx.lineWidth = 2;
+        this.#mainCtx.stroke();
+        this.#mainCtx.restore();
+
+        // Slice cutout onto the floating puzzle piece canvas
+        this.#pieceCtx.clearRect(0, 0, w, h);
+        this.#pieceCtx.save();
+        this.#drawPuzzleShape(this.#pieceCtx, 0, this.#puzzleTargetY, size);
+        this.#pieceCtx.clip();
+        this.#pieceCtx.drawImage(
+          this.#mainCanvas,
+          this.#puzzleTargetX, this.#puzzleTargetY - size * 0.3, size + 20, size + 20,
+          0, this.#puzzleTargetY - size * 0.3, size + 20, size + 20
+        );
+        this.#pieceCtx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        this.#pieceCtx.lineWidth = 2;
+        this.#pieceCtx.stroke();
+        this.#pieceCtx.restore();
+      }
+
+      #drawMatrixOCR() {
+        const w = this.#mainCanvas.width;
+        const h = this.#mainCanvas.height;
+        const ctx = this.#mainCtx;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#090d16';
+        ctx.fillRect(0, 0, w, h);
+
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        this.#expectedAnswer = Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
+        // Noise Grid
+        for (let x = 0; x < w; x += 15) {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+          ctx.strokeRect(x, 0, 15, h);
+        }
+
+        // Distorted glyphs
+        this.#expectedAnswer.split('').forEach((char, i) => {
+          ctx.save();
+          const x = 55 + i * 55;
+          const y = h / 2 + (Math.random() - 0.5) * 15;
+          const angle = (Math.random() - 0.5) * 0.45;
+          ctx.translate(x, y);
+          ctx.rotate(angle);
+          ctx.font = 'bold 38px monospace';
+          ctx.fillStyle = i % 2 === 0 ? '#818cf8' : '#34d399';
+          ctx.fillText(char, 0, 0);
+          ctx.restore();
+        });
+
+        // Interference warp lines
+        for (let i = 0; i < 4; i++) {
+          ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, Math.random() * h);
+          ctx.lineTo(w, Math.random() * h);
+          ctx.stroke();
+        }
+      }
+
+      #drawAudioWaveformScene() {
+        const w = this.#mainCanvas.width;
+        const h = this.#mainCanvas.height;
+        const ctx = this.#mainCtx;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, w, h);
+
+        // Generate 4 random digits
+        this.#audioDigits = Array.from({ length: 4 }, () => Math.floor(Math.random() * 10)).join('');
+        this.#expectedAnswer = this.#audioDigits;
+
+        // Draw dynamic audio waveform visual
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        for (let x = 0; x < w; x += 6) {
+          const y = h / 2 + Math.sin(x * 0.08) * 30 * Math.random();
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.font = '13px sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.textAlign = 'center';
+        ctx.fillText('Press the speaker button & enter spoken digits', w / 2, h - 25);
+      }
+
+      #verifyPuzzle() {
+        const maxTrack = this.track.clientWidth - this.thumb.clientWidth - 4;
+        const canvasMax = this.#mainCanvas.width - this.#puzzlePieceSize - 10;
+        const currentCanvasX = (this.#currentSliderX / maxTrack) * canvasMax;
+
+        const delta = Math.abs(currentCanvasX - this.#puzzleTargetX);
+        const tolerance = 7; // ±7px leeway
+
+        if (delta <= tolerance) {
+          this.#triggerSuccess('Security challenge passed! (Puzzle Aligned)');
+        } else {
+          this.#triggerFailure('Misaligned puzzle piece. Try again.');
+        }
+      }
+
+      #verifyTextChallenge() {
+        const input = this.textInput.value.trim().toUpperCase();
+        if (input === this.#expectedAnswer) {
+          this.#triggerSuccess('Security challenge passed! (OCR Verified)');
+        } else {
+          this.#triggerFailure('Incorrect answer. New challenge generated.');
+        }
+      }
+
+      #triggerSuccess(msg) {
+        // Honeypot bot check
+        if (document.getElementById('botTrapField').value !== '') {
+          this.#triggerFailure('Bot behavior signature detected.');
+          return;
+        }
+
+        this.#isVerified = true;
+        this.sound.playSuccess();
+        this.confetti.burst();
+        this.status.innerText = `✓ ${msg}`;
+        this.status.className = 'status-panel success';
+
+        this.thumb.style.background = 'var(--success)';
+        this.textInput.disabled = true;
+        document.getElementById('verifyTextBtn').disabled = true;
+
+        const eventPayload = {
+          verified: true,
+          mode: this.#mode,
+          powProof: this.#powProof,
+          entropy: this.#entropy,
+          timestamp: Date.now()
+        };
+
+        console.log('OmniShield Verification Signature Token:', eventPayload);
+        document.dispatchEvent(new CustomEvent('omnishield-success', { detail: eventPayload }));
+      }
+
+      #triggerFailure(msg) {
+        this.sound.playError();
+        this.status.innerText = `✕ ${msg}`;
+        this.status.className = 'status-panel error';
+        setTimeout(() => this.generateChallenge(), 900);
+      }
+    }
+
+    // Launch standalone instance on DOM load
     document.addEventListener('DOMContentLoaded', () => {
-      new SecureCaptcha('captchaCanvas');
+      window.shield = new OmniShield();
     });
   </script>
 </body>
